@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-govMatte-bg text-govMatte-text font-sans antialiased selection:bg-govBlue-light/40 selection:text-govBlue-dark transition-colors duration-200;
+  }
+}
+
+/* Custom Matte Glassmorphism utility - Light Theme */
+.matte-glass {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Scrollbar styling - thin and elegant light theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(37, 99, 235, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.4);
+}
+
+/* Matte card transition utilities */
+.matte-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Interactive cursor card glow - Light Theme soft blue/indigo */
+.interactive-card {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
+}
+
+.interactive-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(37, 99, 235, 0.04) 0%, transparent 80%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.interactive-card:hover::before {
+  opacity: 1;
+}
+
+/* Soft light background mesh overlay */
+.bg-mesh {
+  background-image: 
+    radial-gradient(at 10% 20%, rgba(37, 99, 235, 0.04) 0px, transparent 50%),
+    radial-gradient(at 90% 10%, rgba(16, 185, 129, 0.02) 0px, transparent 40%),
+    radial-gradient(at 50% 80%, rgba(37, 99, 235, 0.02) 0px, transparent 50%);
+}
+
+/* Text gradients - high-contrast light theme gradients */
+.text-gradient-neon {
+  background: linear-gradient(135deg, #1e3a8a 30%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-indigo {
+  background: linear-gradient(135deg, #1e3a8a 20%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Global inputs, select dropdowns, and textareas styling */
+input[type="text"], input[type="email"], input[type="password"], input[type="tel"], select, textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 0.75rem !important;
+}
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="tel"]:focus, select:focus, textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+  outline: none !important;
+}
+input::placeholder, textarea::placeholder {
+  color: #94a3b8 !important;
+}
+select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Explicit light-theme class mapping overrides */
+body {
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+  font-family: 'Outfit', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+.bg-govMatte-bg {
+  background-color: #f8fafc !important;
+}
+.bg-govMatte-card {
+  background-color: #ffffff !important;
+}
+.text-govMatte-text, .text-slate-900, .text-gray-900, .text-slate-800 {
+  color: #0f172a !important;
+}
+.text-govMatte-muted, .text-slate-600, .text-gray-600, .text-slate-500, .text-gray-500 {
+  color: #64748b !important;
+}
+.border-govMatte-border {
+  border-color: #e2e8f0 !important;
+}
+
+/* Global visual card overrides to maintain clean light palette */
+.interactive-card {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.bg-white {
+  background-color: #ffffff !important;
+}
+.hover\:bg-slate-50:hover {
+  background-color: #f8fafc !important;
+}
+.bg-slate-50 {
+  background-color: #f8fafc !important;
+}
+.bg-slate-100 {
+  background-color: #f1f5f9 !important;
+}
+.bg-gray-50 {
+  background-color: #f9fafb !important;
+}
+.bg-gray-100 {
+  background-color: #f3f4f6 !important;
+}
+.border-govMatte-border\/60 {
+  border-color: #e2e8f0 !important;
+}
