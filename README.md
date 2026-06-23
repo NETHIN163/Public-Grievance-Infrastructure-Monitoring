@@ -19,7 +19,7 @@ Designed with a premium **Deep Space Dark Theme** inspired by modern glassmorphi
 - **Dynamic Homepage:** Interactive hero banner, civic statistics, project features, workflow guide, and a feedback footer.
 - **Create Complaint Form:** Dynamic dropdown selectors for municipal categories, automatic telemetry pre-checks, and file attachment simulations.
 - **Interactive Tracking:** A real-time timeline tracking ticket status updates (Submitted ➔ Under Review ➔ Assigned ➔ In Progress ➔ Resolved).
-- **Alerts & Profile Settings:** Citizen notifications bulletin and editable profile details.
+- **Security & Profile Settings:** Citizen notifications bulletin, OTP verification during registration, and editable profile details.
 
 ### 👮 Ground Officer Portal
 - **Case Analytics:** Aggregated dashboard tracking active cases, pending status updates, and resolutions.
@@ -30,7 +30,7 @@ Designed with a premium **Deep Space Dark Theme** inspired by modern glassmorphi
 - **Control Dashboard:** Centralized graphs representing category distribution and monthly ticket resolutions.
 - **Citizen Registry:** Directory listing all registered citizens and activation statuses.
 - **Officer Deployment:** Deployment panel featuring interactive officer search and dispatch scheduling.
-- **incident Monitor:** Consolidated global table with live query searching and multi-parameter filters (Category, Priority, Work Status).
+- **Incident Monitor:** Consolidated global table with live query searching and multi-parameter filters (Category, Priority, Work Status).
 - **Incident Dispatch:** Route pending complaints to nearest crews.
 
 ### 🛡️ Cybersecurity Telemetry & Compliance
@@ -40,6 +40,8 @@ Designed with a premium **Deep Space Dark Theme** inspired by modern glassmorphi
 ---
 
 ## 🛠️ Technology Stack
+
+### Frontend
 - **Framework:** React.js (Vite environment)
 - **State Management:** Redux Toolkit (stores for auth, complaints, and security compliance logs)
 - **Styling:** Tailwind CSS, PostCSS (Glassmorphism overrides, Custom cursor glows, Scrollbar thumb styles)
@@ -47,18 +49,39 @@ Designed with a premium **Deep Space Dark Theme** inspired by modern glassmorphi
 - **Iconography:** Lucide React (futuristic high-tech line icons)
 - **Routing:** React Router v6
 
+### Backend
+- **Runtime:** Node.js (Express framework)
+- **Database:** SQLite (local persistent file-based SQL store)
+- **Authentication:** JWT (JSON Web Tokens) with Secure HTTP Header session validation
+- **Password Security:** Salted Hashing via bcryptjs (10 rounds)
+- **Email Dispatch:** Gmail SMTP integration with automated OTP generation and Ethereal Mail fallback
+
 ---
 
 ## 📁 Project Structure
 ```text
 project/
+├── backend/                # Node.js + Express Backend API
+│   ├── config/             # SQLite connection & Database initialization
+│   │   └── db.js
+│   ├── controllers/        # Handlers for Auth, Login, Registration, OTPs, Reset
+│   │   └── authController.js
+│   ├── middleware/         # JWT parser and Route Guards (Role-Based Access Control)
+│   │   └── authMiddleware.js
+│   ├── models/             # Database queries wrapper
+│   │   └── userModel.js
+│   ├── routes/             # Authentication & verification routing endpoints
+│   │   └── authRoutes.js
+│   ├── server.js           # Server initializer, JSON Parser, and CORS setup
+│   ├── .env.example        # Environment variables structure template
+│   └── database.db         # Persistent SQLite database (local-only, git ignored)
 ├── public/                 # Static assets (Favicons, images)
 ├── src/
 │   ├── assets/             # SVG graphics and logos
 │   ├── components/
 │   │   └── Shared/         # Reusable layouts (Navbar, Sidebar, Card, Loader)
 │   ├── pages/
-│   │   ├── Public/         # Public pages (Home, About, Contact, Login, Register)
+│   │   ├── Public/         # Public pages (Home, About, Contact, Login, Register, ForgotPassword, ResetPassword, OTPVerify)
 │   │   ├── Citizen/        # Citizen workflow pages
 │   │   ├── Officer/        # Ground officer action dashboards
 │   │   ├── Admin/          # Administrative dashboards & registries
@@ -66,12 +89,12 @@ project/
 │   ├── store/
 │   │   ├── slices/         # Redux state logic (auth, complaints, security)
 │   │   └── index.js        # Global Redux Store config
-│   ├── App.jsx             # Main router mapping & layouts
+│   ├── App.jsx             # Main router mapping, layout config, and Role Guards
 │   ├── index.css           # Glassmorphism utilities & global style overrides
 │   └── main.jsx            # Application entry point
 ├── tailwind.config.js      # Color definitions & design tokens
 ├── postcss.config.js       # CSS preprocessor settings
-└── package.json            # Dependencies & build scripts
+└── package.json            # Frontend dependencies & build scripts
 ```
 
 ---
@@ -81,30 +104,64 @@ project/
 ### Prerequisites
 Make sure you have [Node.js](https://nodejs.org/) installed (v18+ recommended).
 
-### 1. Installation
-Clone the repository and install project dependencies:
+### 1. Setup Backend API
+Navigate to the `/backend` directory:
 ```bash
-# Install NPM packages
+cd backend
+```
+
+Install backend dependencies:
+```bash
 npm install
 ```
 
-### 2. Launch Local Server
-Start the local Vite development server:
+Configure Environment variables. Copy the `.env.example` template:
+```bash
+cp .env.example .env
+```
+Open the created `.env` file and set the following credentials:
+```env
+PORT=5000
+JWT_SECRET=your_jwt_secret_key_here
+SMTP_EMAIL=your_gmail_address_here
+SMTP_PASSWORD=your_gmail_app_password_here
+```
+*(Note: If SMTP credentials are left blank, the server automatically falls back to generating local mock preview URLs)*
+
+Start the backend development server:
 ```bash
 npm run dev
 ```
-Open your browser and navigate to the address shown in the terminal (usually `http://localhost:5173`).
+The backend API server will launch at `http://localhost:5000`.
 
-### 3. Production Build
-To compile and minify the project files for production deployment:
+### 2. Setup Frontend React App
+Navigate back to the project root directory:
 ```bash
-npm run build
+cd ..
 ```
+
+Install frontend dependencies:
+```bash
+npm install
+```
+
+Start the Vite development server:
+```bash
+npm run dev
+```
+The React app will launch at `http://localhost:5173`.
 
 ---
 
-## 🧪 Simulation Guide
-To quickly review the workspaces of different roles without resetting credentials:
-1. Log in with any credentials or click Register/Login.
-2. Locate the **Role Selector dropdown** on the top navigation bar (only visible when authenticated).
-3. Switch between **ADMIN**, **OFFICER**, and **CITIZEN** accounts to test role-specific dashboards and live data synchronization instantly.
+## 🔐 Default Pre-seeded Credentials
+For testing different roles, the backend automatically seeds the database on first run with the following default accounts (password for all accounts is `password123`):
+
+*   **Citizen Workspace**:
+    *   Email: `citizen@example.com`
+    *   Password: `password123`
+*   **Ground Officer Workspace**:
+    *   Email: `officer@example.com`
+    *   Password: `password123`
+*   **Administrator Command Center**:
+    *   Email: `admin@example.com`
+    *   Password: `password123`
