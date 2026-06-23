@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, UserPlus, ArrowRight, Phone } from 'lucide-react';
@@ -19,6 +19,10 @@ export default function Register() {
     confirmPassword: ''
   });
   const [validationError, setValidationError] = useState('');
+
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -66,7 +70,7 @@ export default function Register() {
 
         {(validationError || error) && (
           <div className="mb-4">
-            <Alert type="error" message={validationError || error} onClose={() => setValidationError('')} />
+            <Alert type="error" message={validationError || error} onClose={() => { setValidationError(''); dispatch(clearError()); }} />
           </div>
         )}
 

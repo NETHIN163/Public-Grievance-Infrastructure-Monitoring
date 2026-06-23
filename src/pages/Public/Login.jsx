@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, ShieldCheck, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, ShieldCheck, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { clearError, resendOTP } from '../../store/slices/authSlice';
 import { addSecurityAlert, addAuditLog } from '../../store/slices/securitySlice';
 import Alert from '../../components/Shared/Alert';
@@ -20,9 +20,10 @@ export default function Login() {
   const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
-    // Clear any leftover auth errors when entering page
+    // Clear leftover auth errors
     dispatch(clearError());
-    // Block browser back button from leaving login page unexpectedly
+
+    // Block browser back button
     window.history.pushState(null, '', window.location.href);
     const handlePopState = () => {
       window.history.pushState(null, '', window.location.href);
@@ -33,7 +34,6 @@ export default function Login() {
 
   useEffect(() => {
     if (currentUser) {
-      // Create audit log for login
       dispatch(addAuditLog({
         userName: currentUser.name,
         role: currentUser.role,
@@ -42,7 +42,6 @@ export default function Login() {
         newValue: `Session: Online (IP logged)`
       }));
 
-      // Route accordingly
       if (currentUser.role === 'citizen') navigate('/citizen/dashboard');
       if (currentUser.role === 'officer') navigate('/officer/dashboard');
       if (currentUser.role === 'admin') navigate('/admin/dashboard');
@@ -67,17 +66,15 @@ export default function Login() {
           isValidUser = true;
         }
       } else {
-        // Citizen login checks
         if (foundUser.password) {
           isValidUser = foundUser.password === password;
         } else {
-          isValidUser = true; // default demo citizen allows any password
+          isValidUser = true; // seed demo citizen allows any password
         }
       }
     }
     
     if (isValidUser) {
-      // Send real OTP on login using Flask API, then navigate to OTP verification
       dispatch(resendOTP(email))
         .unwrap()
         .then(() => {
@@ -87,7 +84,6 @@ export default function Login() {
           setLoginError(err || 'Failed to dispatch verification code.');
         });
     } else {
-      // Failure handling with security alerts
       const currentAttempts = failedAttempts + 1;
       setFailedAttempts(currentAttempts);
       if (currentAttempts >= 3) {
@@ -114,12 +110,21 @@ export default function Login() {
       <Card className="shadow-lg">
         
         {/* Crest & Title */}
-        <div className="text-center space-y-2 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-govBlue text-white flex items-center justify-center mx-auto shadow-md">
+        <div className="text-center space-y-3 mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-govBlue text-white flex items-center justify-center mx-auto shadow-md transform hover:scale-105 transition-transform duration-200">
             <ShieldCheck className="w-7 h-7" />
           </div>
-          <h2 className="text-xl font-extrabold text-govBlue">Portal Authentication</h2>
-          <p className="text-[10px] text-govMatte-muted uppercase tracking-wider font-semibold">Government of India Secure Access</p>
+          <div className="space-y-1">
+            <h1 className="text-sm font-extrabold text-govGreen uppercase tracking-wider">
+              PGIMS
+            </h1>
+            <h2 className="text-[13px] font-extrabold text-govBlue font-sans uppercase leading-tight tracking-wide">
+              Public Grievance &amp; Infrastructure Monitoring
+            </h2>
+            <p className="text-[10px] text-govMatte-muted uppercase tracking-widest font-bold">
+              Secure Access Portal
+            </p>
+          </div>
         </div>
 
         {(loginError || error) && (
@@ -130,7 +135,8 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs font-semibold text-govMatte-text">
           
-          <div className="space-y-1">
+          {/* Registered Email field */}
+          <div className="space-y-1 text-left">
             <label htmlFor="email" className="block text-govMatte-muted">Registered Email Address</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-govMatte-muted">
@@ -143,12 +149,13 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@gov.in"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-govMatte-border focus:outline-none focus:border-govBlue/60 bg-govMatte-bg/30 font-medium text-xs"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-govMatte-border focus:outline-none focus:border-govBlue/60 bg-govMatte-bg/30 font-medium text-xs text-slate-800"
               />
             </div>
           </div>
 
-          <div className="space-y-1">
+          {/* Password field */}
+          <div className="space-y-1 text-left">
             <div className="flex items-center justify-between">
               <label htmlFor="password" className="block text-govMatte-muted">Account Password</label>
               <Link to="/forgot-password" className="text-[10px] text-govGreen font-bold hover:underline">
@@ -166,7 +173,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-govMatte-border focus:outline-none focus:border-govBlue/60 bg-govMatte-bg/30 font-medium text-xs"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-govMatte-border focus:outline-none focus:border-govBlue/60 bg-govMatte-bg/30 font-medium text-xs text-slate-800"
               />
               <button
                 type="button"
@@ -179,23 +186,24 @@ export default function Login() {
           </div>
 
           {/* Remember Me */}
-          <div className="flex items-center">
+          <div className="flex items-center text-left">
             <input
               id="remember-me"
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 text-govBlue border-govMatte-border rounded focus:ring-0"
+              className="h-4 w-4 text-govBlue border-govMatte-border rounded focus:ring-0 cursor-pointer"
             />
             <label htmlFor="remember-me" className="ml-2 block text-[11px] text-govMatte-muted font-bold select-none cursor-pointer">
               Remember my credentials on this device
             </label>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-govBlue text-white font-bold rounded-xl hover:bg-govBlue-light shadow-md shadow-govBlue/15 flex items-center justify-center space-x-2 matte-transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2.5 bg-govBlue hover:bg-govBlue-light text-white font-bold rounded-xl shadow-md shadow-govBlue/15 flex items-center justify-center space-x-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
           >
             <span>{loading ? "Verifying..." : "Secure Login"}</span>
             <ArrowRight className="w-4 h-4" />
@@ -210,8 +218,6 @@ export default function Login() {
             </Link>
           </p>
         </div>
-
-
 
       </Card>
     </div>
