@@ -58,7 +58,7 @@ export default function Navbar() {
     }
     dispatch(logout());
     setProfileOpen(false);
-    navigate('/login');
+    navigate('/');
   };
 
   return (

@@ -22,6 +22,13 @@ export default function Login() {
   useEffect(() => {
     // Clear any leftover auth errors when entering page
     dispatch(clearError());
+    // Block browser back button from leaving login page unexpectedly
+    window.history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [dispatch]);
 
   useEffect(() => {
@@ -204,15 +211,7 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Demo Helper box */}
-        <div className="mt-5 p-3.5 bg-amber-50/70 border border-amber-200/50 rounded-xl text-[10px] text-amber-900 leading-normal">
-          <p className="font-extrabold uppercase tracking-wider text-amber-800">Review Helper Accounts:</p>
-          <ul className="list-disc list-inside mt-1 space-y-0.5">
-            <li>Citizen: <strong className="font-mono text-[11px]">citizen@gov.in</strong> / Password: <strong className="font-mono">any</strong> (or sign up a new account)</li>
-            <li>Officer: <strong className="font-mono text-[11px]">nethraswathi17@gmail.com</strong> / Password: <strong className="font-mono">nethrasara</strong></li>
-            <li>Admin: <strong className="font-mono text-[11px]">nethin163@gmail.com</strong> / Password: <strong className="font-mono">9894506871</strong></li>
-          </ul>
-        </div>
+
 
       </Card>
     </div>

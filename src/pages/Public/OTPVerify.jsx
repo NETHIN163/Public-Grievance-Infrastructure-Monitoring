@@ -23,6 +23,21 @@ export default function OTPVerify() {
   const regData = location.state?.regData || null;
   const resetEmail = location.state?.resetEmail || null;
 
+  // Guard: If no valid state (not coming from register/login), redirect to home
+  useEffect(() => {
+    if (!regData && !resetEmail) {
+      navigate('/', { replace: true });
+      return;
+    }
+    // Block browser back button — push a dummy history entry so back goes nowhere harmful
+    window.history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [regData, resetEmail, navigate]);
+
   useEffect(() => {
     let timer;
     if (resendTimer > 0) {

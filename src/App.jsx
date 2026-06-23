@@ -65,6 +65,8 @@ function PortalLayout({ children, role }) {
 
 // Global Layout
 export default function App() {
+  const { currentUser } = useSelector((state) => state.auth);
+
   return (
     <div className="h-screen flex flex-col bg-govMatte-bg transition-colors duration-200 overflow-hidden">
       <Navbar />
@@ -72,12 +74,33 @@ export default function App() {
       {/* Route mapping */}
       <div className="flex-1 w-full min-h-0 overflow-y-auto">
         <Routes>
-          {/* Public Pages */}
-          <Route path="/" element={<Home />} />
+          {/* Public Pages — redirect logged-in users to their dashboard */}
+          <Route
+            path="/"
+            element={
+              currentUser
+                ? <Navigate to={`/${currentUser.role}/dashboard`} replace />
+                : <Home />
+            }
+          />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route
+            path="/login"
+            element={
+              currentUser
+                ? <Navigate to={`/${currentUser.role}/dashboard`} replace />
+                : <Login />
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              currentUser
+                ? <Navigate to={`/${currentUser.role}/dashboard`} replace />
+                : <Register />
+            }
+          />
           <Route path="/otp-verify" element={<OTPVerify />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
