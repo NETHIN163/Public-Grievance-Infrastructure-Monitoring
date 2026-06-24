@@ -167,7 +167,7 @@ def send_otp_email(to_email, otp):
 # Initialize database on startup
 init_db()
 
-@app.route('/api/register', methods=['POST'])
+@app.route('/api/auth/register', methods=['POST'])
 def register():
     data = request.json
     name = data.get('name')
@@ -203,7 +203,7 @@ def register():
     
     return jsonify({"message": "Verification code dispatched to your email."}), 200
 
-@app.route('/api/verify-otp', methods=['POST'])
+@app.route('/api/auth/verify-otp', methods=['POST'])
 def verify_otp():
     data = request.json
     email = data.get('email')
@@ -273,7 +273,7 @@ def verify_otp():
         conn.close()
         return jsonify({"error": "Failed to create account. Email may have been registered during verification."}), 400
 
-@app.route('/api/resend-otp', methods=['POST'])
+@app.route('/api/auth/resend-otp', methods=['POST'])
 def resend_otp():
     data = request.json
     email = data.get('email')
@@ -310,7 +310,7 @@ def resend_otp():
     send_otp_email(email.lower().strip(), otp)
     return jsonify({"message": "A fresh 6-digit security code has been transmitted to your inbox."}), 200
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.json
     email = data.get('email')
@@ -357,6 +357,73 @@ def login():
     # Remove password from response for security
     user.pop('password', None)
     return jsonify({"user": user, "message": "Authentication successful."}), 200
+
+@app.route('/api/auth/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.json
+    email = data.get('email')
+
+    if not email:
+        return jsonify({"error": "Please provide email."}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT name FROM users WHERE email = ?", (email.lower().strip(),))
+    user_rec = cursor.fetchone()
+
+    if not user_rec:
+        conn.close()
+        return jsonify({"error": "Email address not registered."}), 400
+
+    otp = str(random.randint(100000, 999999))
+
+    cursor.execute('''
+        INSERT OR REPLACE INTO temp_registrations (email, name, password, otp)
+        VALUES (?, ?, 'reset_pending', ?)
+    ''', (email.lower().strip(), user_rec['name'], otp))
+    conn.commit()
+    conn.close()
+
+    send_otp_email(email.lower().strip(), otp)
+    return jsonify({"message": "Password reset code dispatched to your email."}), 200
+
+
+@app.route('/api/auth/reset-password', methods=['POST'])
+def reset_password():
+    data = request.json
+    email = data.get('email')
+    otp = data.get('otp')
+    new_password = data.get('newPassword')
+    confirm_password = data.get('confirmPassword')
+
+    if not email or not otp or not new_password or not confirm_password:
+        return jsonify({"error": "Please provide all required fields."}), 400
+
+    if new_password != confirm_password:
+        return jsonify({"error": "Passwords do not match."}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT otp FROM temp_registrations WHERE email = ?", (email.lower().strip(),))
+    record = cursor.fetchone()
+
+    if not record:
+        conn.close()
+        return jsonify({"error": "Reset context expired. Please request a new code."}), 400
+
+    if record['otp'] != otp:
+        conn.close()
+        return jsonify({"error": "Invalid verification code."}), 400
+
+    cursor.execute("UPDATE users SET password = ? WHERE email = ?", (new_password, email.lower().strip()))
+    cursor.execute("DELETE FROM temp_registrations WHERE email = ?", (email.lower().strip(),))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Password reset successfully."}), 200
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
