@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { KeyRound, RotateCw, ExternalLink, Mail } from 'lucide-react';
-import { login, verifyOTP, resendOTP } from '../../store/slices/authSlice';
+import { KeyRound, RotateCw, Mail } from 'lucide-react';
+import { loginUser, verifyOTP, resendOTP } from '../../store/slices/authSlice';
 import { addSecurityAlert, addAuditLog } from '../../store/slices/securitySlice';
 import Alert from '../../components/Shared/Alert';
 import Card from '../../components/Shared/Card';
@@ -18,7 +18,7 @@ export default function OTPVerify() {
   const [resendTimer, setResendTimer] = useState(30);
 
 
-  const { loading, users } = useSelector((state) => state.auth);
+  const { loading } = useSelector((state) => state.auth);
 
   const regData = location.state?.regData || null;
   const resetEmail = location.state?.resetEmail || null;
@@ -76,27 +76,31 @@ export default function OTPVerify() {
           // Login or Password Reset flow
           const password = location.state?.password;
           if (password) {
-            // This is a Login flow - dispatch local login action to update Redux session
-            dispatch(login({ email: resetEmail, password }));
-            
-            const foundUser = users.find(u => u.email.toLowerCase() === resetEmail.toLowerCase().trim());
-            const userRole = foundUser ? foundUser.role : 'citizen';
+            // This is a Login flow - use backend loginUser thunk for proper JWT session
+            dispatch(loginUser({ email: resetEmail, password }))
+              .unwrap()
+              .then((data) => {
+                const userRole = data.user?.role || 'citizen';
 
-            dispatch(addAuditLog({
-              userName: resetEmail,
-              role: userRole,
-              action: 'Authentication Successful',
-              oldValue: 'Session: Offline',
-              newValue: 'Session: Online (IP logged)'
-            }));
+                dispatch(addAuditLog({
+                  userName: data.user?.name || resetEmail,
+                  role: userRole,
+                  action: 'Authentication Successful',
+                  oldValue: 'Session: Offline',
+                  newValue: 'Session: Online (IP logged)'
+                }));
 
-            if (userRole === 'admin') {
-              navigate('/admin/dashboard');
-            } else if (userRole === 'officer') {
-              navigate('/officer/dashboard');
-            } else {
-              navigate('/citizen/dashboard');
-            }
+                if (userRole === 'admin') {
+                  navigate('/admin/dashboard');
+                } else if (userRole === 'officer') {
+                  navigate('/officer/dashboard');
+                } else {
+                  navigate('/citizen/dashboard');
+                }
+              })
+              .catch((err) => {
+                setError(err || 'Authentication failed after OTP. Please try again.');
+              });
           } else {
             // Forgot Password Verification Success
             dispatch(addAuditLog({

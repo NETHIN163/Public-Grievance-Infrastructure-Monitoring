@@ -10,7 +10,7 @@ import Card from '../../components/Shared/Card';
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { currentUser, error, users, loading } = useSelector((state) => state.auth);
+  const { currentUser, error, loading } = useSelector((state) => state.auth);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,60 +48,57 @@ export default function Login() {
     }
   }, [currentUser, navigate, dispatch]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoginError('');
     dispatch(clearError());
     
     const userEmail = email.toLowerCase().trim();
-    const foundUser = users.find(u => u.email.toLowerCase() === userEmail);
-    
-    let isValidUser = false;
-    
-    if (foundUser) {
-      if (foundUser.role === 'admin' || foundUser.role === 'officer') {
-        if (userEmail === 'nethin163@gmail.com' && password === '9894506871') {
-          isValidUser = true;
-        } else if (userEmail === 'nethraswathi17@gmail.com' && password === 'nethrasara') {
-          isValidUser = true;
-        }
-      } else {
-        if (foundUser.password) {
-          isValidUser = foundUser.password === password;
+
+    // Step 1: Validate credentials with backend first
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, password }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Backend rejected credentials
+        const currentAttempts = failedAttempts + 1;
+        setFailedAttempts(currentAttempts);
+        if (currentAttempts >= 3) {
+          dispatch(addSecurityAlert({
+            user: userEmail || 'anonymous',
+            activity: `Brute Force Suspected (${currentAttempts} failed logins)`,
+            riskLevel: 'High',
+            details: `Repetitive wrong passwords submitted. Security protocol triggered.`
+          }));
         } else {
-          isValidUser = true; // seed demo citizen allows any password
+          dispatch(addSecurityAlert({
+            user: userEmail || 'anonymous',
+            activity: 'Failed Login Attempt (Password mismatch)',
+            riskLevel: 'Low',
+            details: `Invalid login parameters recorded.`
+          }));
         }
+        setLoginError(data.error || 'Invalid credentials. Please verify and try again.');
+        return;
       }
-    }
-    
-    if (isValidUser) {
-      dispatch(resendOTP(email))
+
+      // Step 2: Credentials valid — send OTP to user's email for 2FA
+      dispatch(resendOTP(userEmail))
         .unwrap()
         .then(() => {
-          navigate('/otp-verify', { state: { resetEmail: email, password } });
+          navigate('/otp-verify', { state: { resetEmail: userEmail, password } });
         })
         .catch((err) => {
           setLoginError(err || 'Failed to dispatch verification code.');
         });
-    } else {
-      const currentAttempts = failedAttempts + 1;
-      setFailedAttempts(currentAttempts);
-      if (currentAttempts >= 3) {
-        dispatch(addSecurityAlert({
-          user: email || 'anonymous',
-          activity: `Brute Force Suspected (${currentAttempts} failed logins)`,
-          riskLevel: 'High',
-          details: `Repetitive wrong passwords submitted. Security protocol triggered.`
-        }));
-      } else {
-        dispatch(addSecurityAlert({
-          user: email || 'anonymous',
-          activity: 'Failed Login Attempt (Password mismatch)',
-          riskLevel: 'Low',
-          details: `Invalid login parameters recorded.`
-        }));
-      }
-      setLoginError("Invalid credentials. Please verify and try again.");
+
+    } catch (err) {
+      setLoginError('Network error. Please check your connection and try again.');
     }
   };
 
