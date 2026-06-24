@@ -1,7 +1,7 @@
 {
   "name": "grievance-portal-backend",
   "version": "1.0.0",
-  "description": "Backend API for Grievance Portal using Express, JWT, and SQLite",
+  "description": "Backend API for Grievance Portal using Express, JWT, and PostgreSQL (Neon)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -14,6 +14,6 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.13",
-    "sqlite3": "^5.1.7"
+    "pg": "^8.22.0"
   }
 }
