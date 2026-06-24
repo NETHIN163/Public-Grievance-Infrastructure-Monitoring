@@ -292,20 +292,7 @@ const authSlice = createSlice({
       });
       localStorage.setItem('gov_users', JSON.stringify(state.users));
     },
-    // Switch role for dashboard testing ease
-    devSwitchRole: (state, action) => {
-      const targetRole = action.payload; // 'citizen', 'officer', 'admin', 'public'
-      if (targetRole === 'public') {
-        state.currentUser = null;
-        localStorage.removeItem('gov_session');
-      } else {
-        const found = state.users.find(u => u.role === targetRole);
-        if (found) {
-          state.currentUser = found;
-          localStorage.setItem('gov_session', JSON.stringify(found));
-        }
-      }
-    },
+
     toggleSidebar: (state) => {
       state.sidebarOpen = !state.sidebarOpen;
     },
@@ -452,8 +439,7 @@ export const {
   editUser,
   deleteUser,
   toggleSidebar,
-  setSidebarOpen,
-  devSwitchRole
+  setSidebarOpen
 } = authSlice.actions;
 
 export default authSlice.reducer;

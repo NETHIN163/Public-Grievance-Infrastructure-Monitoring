@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, User, LogOut, ShieldAlert, Monitor, ChevronDown, Sun, Moon, Menu, X } from 'lucide-react';
-import { devSwitchRole, logout, toggleSidebar } from '../../store/slices/authSlice';
+import { Bell, User, LogOut, Monitor, ChevronDown, Sun, Moon, Menu, X } from 'lucide-react';
+import { logout, toggleSidebar } from '../../store/slices/authSlice';
 import { addAuditLog } from '../../store/slices/securitySlice';
 
 export default function Navbar() {
@@ -14,37 +14,9 @@ export default function Navbar() {
   const [guestMobileMenuOpen, setGuestMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
-
   // Mock Notification generation from complaints
   const unassignedCount = complaints.filter(c => c.status === 'Submitted').length;
   const recentComplaints = complaints.slice(0, 3);
-
-  const handleRoleChange = (role) => {
-    const oldRole = currentUser ? currentUser.role : 'Public Guest';
-    dispatch(devSwitchRole(role));
-    setRoleMenuOpen(false);
-    
-    // Log audit
-    const newSession = role === 'public' ? null : users.find(u => u.role === role);
-    dispatch(addAuditLog({
-      userName: newSession ? newSession.name : 'Guest User',
-      role: role,
-      action: 'Role Switched (Dev Widget)',
-      oldValue: `Active Role: ${oldRole}`,
-      newValue: `Active Role: ${role}`
-    }));
-
-    if (role === 'public') {
-      navigate('/');
-    } else if (role === 'citizen') {
-      navigate('/citizen/dashboard');
-    } else if (role === 'officer') {
-      navigate('/officer/dashboard');
-    } else if (role === 'admin') {
-      navigate('/admin/dashboard');
-    }
-  };
 
   const handleLogout = () => {
     if (currentUser) {
@@ -105,56 +77,8 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Action Controls & Role Switcher */}
+        {/* Action Controls & Navigation */}
         <div className="flex items-center space-x-4">
-
-          {/* Developer Role Switcher Widget */}
-          <div className="relative">
-            <button
-              onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-              className="flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-govGreen/10 border border-govGreen/20 text-govGreen hover:bg-govGreen/20 transition-all duration-200 focus:outline-none"
-            >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Role: <strong className="uppercase">{currentUser ? currentUser.role : 'Public'}</strong></span>
-              <ChevronDown className="w-3 h-3" />
-            </button>
-
-            {roleMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-xl bg-govMatte-card border border-govMatte-border shadow-xl py-1 z-50 text-xs text-govMatte-text animate-slide-up">
-                <div className="px-3 py-1 text-[10px] uppercase font-bold text-govMatte-muted tracking-wider border-b border-govMatte-border mb-1">
-                  Simulation Settings
-                </div>
-                <button
-                  onClick={() => handleRoleChange('public')}
-                  className={`w-full text-left px-4 py-2 hover:bg-slate-800/50 hover:text-govGreen flex items-center space-x-2 ${!currentUser ? 'bg-slate-800/40 font-bold text-govGreen' : ''}`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                  <span>Public Guest Portal</span>
-                </button>
-                <button
-                  onClick={() => handleRoleChange('citizen')}
-                  className={`w-full text-left px-4 py-2 hover:bg-slate-800/50 hover:text-govGreen flex items-center space-x-2 ${currentUser?.role === 'citizen' ? 'bg-slate-800/40 font-bold text-govGreen' : ''}`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                  <span>Citizen Portal</span>
-                </button>
-                <button
-                  onClick={() => handleRoleChange('officer')}
-                  className={`w-full text-left px-4 py-2 hover:bg-slate-800/50 hover:text-govGreen flex items-center space-x-2 ${currentUser?.role === 'officer' ? 'bg-slate-800/40 font-bold text-govGreen' : ''}`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                  <span>Officer Portal</span>
-                </button>
-                <button
-                  onClick={() => handleRoleChange('admin')}
-                  className={`w-full text-left px-4 py-2 hover:bg-slate-800/50 hover:text-govGreen flex items-center space-x-2 ${currentUser?.role === 'admin' ? 'bg-slate-800/40 font-bold text-govGreen' : ''}`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-red-600"></span>
-                  <span>Admin Control Panel</span>
-                </button>
-              </div>
-            )}
-          </div>
 
           {/* Quick Portal Navigation Links */}
           <div className="hidden lg:flex items-center space-x-4 border-r border-govMatte-border/60 pr-4">

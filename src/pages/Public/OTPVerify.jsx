@@ -16,9 +16,9 @@ export default function OTPVerify() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [resendTimer, setResendTimer] = useState(30);
-  const [emailPreviewUrl, setEmailPreviewUrl] = useState(location.state?.previewUrl || null);
 
-  const { loading } = useSelector((state) => state.auth);
+
+  const { loading, users } = useSelector((state) => state.auth);
 
   const regData = location.state?.regData || null;
   const resetEmail = location.state?.resetEmail || null;
@@ -79,19 +79,20 @@ export default function OTPVerify() {
             // This is a Login flow - dispatch local login action to update Redux session
             dispatch(login({ email: resetEmail, password }));
             
-            const lowerEmail = resetEmail.toLowerCase();
+            const foundUser = users.find(u => u.email.toLowerCase() === resetEmail.toLowerCase().trim());
+            const userRole = foundUser ? foundUser.role : 'citizen';
+
             dispatch(addAuditLog({
               userName: resetEmail,
-              role: (lowerEmail === 'nethin163@gmail.com' || lowerEmail === 'admin@gov.in') ? 'admin' : 
-                    ((lowerEmail === 'nethraswathi17@gmail.com' || lowerEmail.includes('officer')) ? 'officer' : 'citizen'),
+              role: userRole,
               action: 'Authentication Successful',
               oldValue: 'Session: Offline',
               newValue: 'Session: Online (IP logged)'
             }));
 
-            if (lowerEmail === 'nethin163@gmail.com' || lowerEmail === 'admin@gov.in') {
+            if (userRole === 'admin') {
               navigate('/admin/dashboard');
-            } else if (lowerEmail === 'nethraswathi17@gmail.com' || lowerEmail.includes('officer')) {
+            } else if (userRole === 'officer') {
               navigate('/officer/dashboard');
             } else {
               navigate('/citizen/dashboard');
@@ -133,10 +134,7 @@ export default function OTPVerify() {
           setSuccess(data.message || "A fresh 6-digit security code has been transmitted to your email inbox.");
           setTimeout(() => setSuccess(''), 5000);
 
-          // Update the preview URL if a new one is provided
-          if (data.previewUrl) {
-            setEmailPreviewUrl(data.previewUrl);
-          }
+
           
           dispatch(addAuditLog({
             userName: emailToVerify || 'anonymous',
@@ -218,38 +216,10 @@ export default function OTPVerify() {
           </button>
         </div>
 
-        {/* Email Preview Link — shows when using Ethereal test email */}
-        {emailPreviewUrl && (
-          <div className="mt-5 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/70 rounded-xl">
-            <div className="flex items-center gap-2 mb-2">
-              <Mail className="w-4 h-4 text-blue-600" />
-              <span className="text-xs font-bold text-blue-900">📧 Your OTP Email is Ready</span>
-            </div>
-            <p className="text-[11px] text-blue-800 mb-3 leading-relaxed">
-              Click the button below to open your verification email and find your 6-digit OTP code:
-            </p>
-            <a
-              href={emailPreviewUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-xs shadow-sm"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Open OTP Email</span>
-            </a>
-            <p className="text-[10px] text-blue-600/70 mt-2 text-center">
-              Opens in a new tab — copy the 6-digit code and paste it above
-            </p>
-          </div>
-        )}
-
-        {/* Fallback hint when no preview URL (real SMTP was used) */}
-        {!emailPreviewUrl && (
-          <div className="mt-5 p-3 bg-green-50/70 border border-green-100/50 rounded-xl text-[10px] text-green-900 text-center">
-            <Mail className="w-4 h-4 mx-auto mb-1 text-green-600" />
-            Check your email inbox (and spam folder) for the 6-digit verification code.
-          </div>
-        )}
+        <div className="mt-5 p-3 bg-green-50/70 border border-green-100/50 rounded-xl text-[10px] text-green-900 text-center">
+          <Mail className="w-4 h-4 mx-auto mb-1 text-green-600" />
+          Check your email inbox (and spam folder) for the 6-digit verification code.
+        </div>
 
       </Card>
     </div>
