@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, MapPin, Upload, AlertCircle, FilePlus } from 'lucide-react';
+import { Sparkles, MapPin, Upload, AlertCircle, FilePlus, Bot, Zap } from 'lucide-react';
 import { addComplaint } from '../../store/slices/complaintsSlice';
 import { addAuditLog } from '../../store/slices/securitySlice';
+import { calculatePriority, suggestCategory, getPriorityDisplay } from '../../services/priorityEngine';
 import Card from '../../components/Shared/Card';
 import Alert from '../../components/Shared/Alert';
 
@@ -21,61 +22,40 @@ export default function CreateComplaint() {
   });
   const [imagePreview, setImagePreview] = useState('');
   
-  // System Suggestions State
-  const [systemSuggestions, setSystemSuggestions] = useState({
-    category: 'Analyzing text...',
-    priority: 'Low',
-    confidence: 0
+  // AI Priority Engine State
+  const [priorityResult, setPriorityResult] = useState({
+    priority: 'Medium',
+    confidence: 0,
+    matchedKeywords: [],
+    source: 'ai-rule-engine',
   });
+  const [suggestedCategory, setSuggestedCategory] = useState('');
 
   const [error, setError] = useState('');
 
-  // Live text parsing to simulate system suggestions
+  // Live AI analysis — recalculates on every text change
   useEffect(() => {
-    const text = (form.title + " " + form.description).toLowerCase();
+    const text = `${form.title} ${form.description}`.trim();
     
-    if (text.trim().length < 5) {
-      setSystemSuggestions({ category: 'Type more details...', priority: 'Low', confidence: 0 });
+    if (text.length < 5) {
+      setPriorityResult({ priority: 'Medium', confidence: 0, matchedKeywords: [], source: 'ai-rule-engine' });
+      setSuggestedCategory('Type more details...');
       return;
     }
 
-    if (text.includes('pothole') || text.includes('road') || text.includes('street damage') || text.includes('highway')) {
-      setSystemSuggestions({
-        category: 'Roads & Highways',
-        priority: 'High',
-        confidence: 94
-      });
-      // Synchronize category if not selected manually
-      if (!form.category) setForm(prev => ({ ...prev, category: 'Roads & Highways' }));
-    } else if (text.includes('water') || text.includes('contamination') || text.includes('leakage') || text.includes('sewage') || text.includes('drain')) {
-      setSystemSuggestions({
-        category: 'Water Supply & Sanitation',
-        priority: 'High',
-        confidence: 96
-      });
-      if (!form.category) setForm(prev => ({ ...prev, category: 'Water Supply & Sanitation' }));
-    } else if (text.includes('streetlight') || text.includes('electricity') || text.includes('power') || text.includes('wire')) {
-      setSystemSuggestions({
-        category: 'Electricity & Power',
-        priority: 'Medium',
-        confidence: 89
-      });
-      if (!form.category) setForm(prev => ({ ...prev, category: 'Electricity & Power' }));
-    } else if (text.includes('garbage') || text.includes('waste') || text.includes('dump') || text.includes('litter') || text.includes('stench')) {
-      setSystemSuggestions({
-        category: 'Waste Management',
-        priority: 'Medium',
-        confidence: 91
-      });
-      if (!form.category) setForm(prev => ({ ...prev, category: 'Waste Management' }));
-    } else {
-      setSystemSuggestions({
-        category: 'General Public Safety',
-        priority: 'Low',
-        confidence: 72
-      });
+    // Calculate priority using the AI engine
+    const result = calculatePriority(form.description, form.category || suggestCategory(text));
+    setPriorityResult(result);
+
+    // Suggest category
+    const catSuggestion = suggestCategory(text);
+    setSuggestedCategory(catSuggestion);
+
+    // Auto-fill category if not manually selected
+    if (!form.category && catSuggestion !== 'General Public Safety') {
+      setForm(prev => ({ ...prev, category: catSuggestion }));
     }
-  }, [form.title, form.description]);
+  }, [form.title, form.description, form.category]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -94,13 +74,13 @@ export default function CreateComplaint() {
       return;
     }
 
-    // Submit complaint
+    // Submit complaint — priority engine runs again in the slice as safety net
     dispatch(addComplaint({
       title: form.title,
       description: form.description,
       category: form.category,
       location: form.location,
-      priority: systemSuggestions.priority,
+      priority: priorityResult.priority,
       citizenName: currentUser.name,
       citizenEmail: currentUser.email,
       citizenPhone: currentUser.phone
@@ -112,11 +92,13 @@ export default function CreateComplaint() {
       role: currentUser.role,
       action: 'Complaint Registration',
       oldValue: 'N/A',
-      newValue: `Created case: ${form.title} (Category: ${form.category})`
+      newValue: `Created case: ${form.title} (Category: ${form.category}, AI Priority: ${priorityResult.priority})`
     }));
 
     navigate('/citizen/my-complaints');
   };
+
+  const display = getPriorityDisplay(priorityResult.priority);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 animate-fade-in">
@@ -239,48 +221,69 @@ export default function CreateComplaint() {
           </button>
         </form>
 
-        {/* System Suggestion Panel */}
+        {/* AI Priority Engine Panel */}
         <div className="space-y-4">
           <Card className="bg-gradient-to-br from-govBlue-dark via-govBlue to-govBlue-light border-slate-700/60 shadow-lg text-white">
             <div className="flex items-center space-x-2 border-b border-white/10 pb-3 mb-4">
-              <Sparkles className="w-5 h-5 text-govGreen-light animate-pulse" />
-              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-100">Telemetry Pre-Check</h3>
+              <Bot className="w-5 h-5 text-govGreen-light animate-pulse" />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-100">AI Priority Engine</h3>
             </div>
             
             <div className="space-y-4 text-xs leading-normal">
               
+              {/* AI Badge */}
+              <div className="flex items-center space-x-2 bg-white/5 rounded-lg px-2.5 py-1.5 border border-white/10">
+                <Sparkles className="w-3.5 h-3.5 text-govGreen-light" />
+                <span className="text-[10px] font-bold text-govGreen-light uppercase tracking-wider">🤖 AI-Assigned Priority</span>
+              </div>
+
               <div className="space-y-1">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Predicted Department</p>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 font-bold text-slate-100">
-                  {systemSuggestions.category}
+                  {suggestedCategory || 'Analyzing text...'}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Severity Level</p>
-                  <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                    systemSuggestions.priority === 'High' 
+                  <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
+                    priorityResult.priority === 'High' 
                       ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
-                      : systemSuggestions.priority === 'Medium'
+                      : priorityResult.priority === 'Medium'
                       ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                   }`}>
-                    {systemSuggestions.priority} Priority
+                    <span>{display.emoji}</span>
+                    <span>{priorityResult.priority} Priority</span>
                   </span>
                 </div>
                 
                 <div className="space-y-1">
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Match Confidence</p>
                   <span className="font-mono text-sm font-extrabold text-govGreen-light">
-                    {systemSuggestions.confidence}%
+                    {priorityResult.confidence}%
                   </span>
                 </div>
               </div>
 
+              {/* Matched Keywords */}
+              {priorityResult.matchedKeywords.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Detected Keywords</p>
+                  <div className="flex flex-wrap gap-1">
+                    {priorityResult.matchedKeywords.slice(0, 5).map((kw, i) => (
+                      <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-md bg-white/10 text-[9px] font-bold text-slate-200 border border-white/10">
+                        <Zap className="w-2.5 h-2.5 mr-0.5 text-govGreen-light" />{kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-start space-x-2.5 bg-slate-950/45 p-3 rounded-xl border border-white/5 text-[10px] text-slate-300">
                 <AlertCircle className="w-4 h-4 text-govGreen-light flex-shrink-0 mt-0.5" />
-                <p>The system automatically analyzes text indicators to sort priorities and scan coordinates. These metrics help the dispatcher assign tasks without manual routing delays.</p>
+                <p>The AI Priority Engine automatically analyzes complaint text to classify severity. This rule-based system can be upgraded to an AI/LLM model in the future without code changes.</p>
               </div>
 
             </div>

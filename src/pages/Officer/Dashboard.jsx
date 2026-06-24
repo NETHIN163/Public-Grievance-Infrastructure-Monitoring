@@ -17,10 +17,18 @@ export default function OfficerDashboard() {
   const totalAssigned = myCases.length;
   const pendingCases = myCases.filter(c => c.status === 'Assigned' || c.status === 'In Progress').length;
   const highPriority = myCases.filter(c => c.priority === 'High' && c.status !== 'Resolved' && c.status !== 'Closed').length;
+  const mediumPriority = myCases.filter(c => c.priority === 'Medium' && c.status !== 'Resolved' && c.status !== 'Closed').length;
+  const lowPriority = myCases.filter(c => c.priority === 'Low' && c.status !== 'Resolved' && c.status !== 'Closed').length;
   const resolvedCases = myCases.filter(c => c.status === 'Resolved' || c.status === 'Closed').length;
 
+  const order = { High: 0, Medium: 1, Low: 2 };
   const urgentCases = myCases
     .filter(c => c.status !== 'Resolved' && c.status !== 'Closed')
+    .sort((a, b) => {
+      const priorityDiff = (order[a.priority] ?? 1) - (order[b.priority] ?? 1);
+      if (priorityDiff !== 0) return priorityDiff;
+      return new Date(b.date) - new Date(a.date);
+    })
     .slice(0, 3);
 
   return (
@@ -33,51 +41,75 @@ export default function OfficerDashboard() {
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card className="hover:border-govBlue/20">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col">
+            <h4 className="text-[10px] font-bold text-govMatte-muted uppercase tracking-wider mb-2">Total Assigned</h4>
+            <div className="flex items-center justify-between">
               <p className="text-2xl font-extrabold text-govBlue">{totalAssigned}</p>
-              <h4 className="text-xs font-bold text-govMatte-muted uppercase tracking-wider mt-0.5">Assigned Cases</h4>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-govBlue/5 flex items-center justify-center text-govBlue">
-              <Briefcase className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-lg bg-govBlue/5 flex items-center justify-center text-govBlue">
+                <Briefcase className="w-4 h-4" />
+              </div>
             </div>
           </div>
         </Card>
 
         <Card className="hover:border-orange-500/20">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col">
+            <h4 className="text-[10px] font-bold text-govMatte-muted uppercase tracking-wider mb-2">Pending</h4>
+            <div className="flex items-center justify-between">
               <p className="text-2xl font-extrabold text-orange-600">{pendingCases}</p>
-              <h4 className="text-xs font-bold text-govMatte-muted uppercase tracking-wider mt-0.5">Awaiting Resolution</h4>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
-              <AlertOctagon className="w-5 h-5 animate-pulse" />
+              <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
+                <AlertOctagon className="w-4 h-4" />
+              </div>
             </div>
           </div>
         </Card>
 
-        <Card className="hover:border-red-500/20">
-          <div className="flex items-center justify-between">
-            <div>
+        <Card className="hover:border-red-500/30 ring-1 ring-transparent hover:ring-red-500/20 transition-all">
+          <div className="flex flex-col">
+            <h4 className="text-[10px] font-bold text-red-700/70 uppercase tracking-wider mb-2">High Severity</h4>
+            <div className="flex items-center justify-between">
               <p className="text-2xl font-extrabold text-red-600">{highPriority}</p>
-              <h4 className="text-xs font-bold text-govMatte-muted uppercase tracking-wider mt-0.5">High Severity</h4>
+              <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-600 border border-red-100">
+                <span className="text-sm">🔴</span>
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
-              <AlertOctagon className="w-5 h-5 text-red-500 animate-bounce" />
+          </div>
+        </Card>
+
+        <Card className="hover:border-amber-500/30 transition-all">
+          <div className="flex flex-col">
+            <h4 className="text-[10px] font-bold text-amber-700/70 uppercase tracking-wider mb-2">Medium Priority</h4>
+            <div className="flex items-center justify-between">
+              <p className="text-2xl font-extrabold text-amber-600">{mediumPriority}</p>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100">
+                <span className="text-sm">🟡</span>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="hover:border-emerald-500/30 transition-all">
+          <div className="flex flex-col">
+            <h4 className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-2">Low Priority</h4>
+            <div className="flex items-center justify-between">
+              <p className="text-2xl font-extrabold text-emerald-600">{lowPriority}</p>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
+                <span className="text-sm">🟢</span>
+              </div>
             </div>
           </div>
         </Card>
 
         <Card className="hover:border-govGreen/20">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col">
+            <h4 className="text-[10px] font-bold text-govMatte-muted uppercase tracking-wider mb-2">Resolved</h4>
+            <div className="flex items-center justify-between">
               <p className="text-2xl font-extrabold text-govGreen">{resolvedCases}</p>
-              <h4 className="text-xs font-bold text-govMatte-muted uppercase tracking-wider mt-0.5">Cases Resolved</h4>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-govGreen/5 flex items-center justify-center text-govGreen">
-              <CheckCircle2 className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-lg bg-govGreen/5 flex items-center justify-center text-govGreen">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
             </div>
           </div>
         </Card>
@@ -109,8 +141,13 @@ export default function OfficerDashboard() {
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
                         <span className="text-[10px] font-mono font-bold text-govBlue">{c.id}</span>
-                        <span className="px-2 py-0.5 rounded text-[8px] font-extrabold uppercase bg-red-100 text-red-700">
-                          {c.priority} Priority
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase flex items-center space-x-1 ${
+                          c.priority === 'High' ? 'bg-red-50 text-red-700 border border-red-100' :
+                          c.priority === 'Medium' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                          'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        }`}>
+                          <span>{c.priority === 'High' ? '🔴' : c.priority === 'Medium' ? '🟡' : '🟢'}</span>
+                          <span>{c.priority}</span>
                         </span>
                       </div>
                       <h4 className="text-xs font-bold text-slate-800 truncate max-w-sm">{c.title}</h4>

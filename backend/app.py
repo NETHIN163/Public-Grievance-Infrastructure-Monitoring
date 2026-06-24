@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
+from priority_engine import calculate_priority
 
 # Load environment variables
 load_dotenv()
@@ -70,6 +71,37 @@ def init_db():
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (u_id, name, email, password, role, avatar, status, area, date_joined))
             
+    conn.commit()
+    
+    # Create complaints table with priority field (NOT NULL DEFAULT 'Medium')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS complaints (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            category TEXT NOT NULL,
+            location TEXT NOT NULL,
+            latitude REAL,
+            longitude REAL,
+            priority TEXT NOT NULL DEFAULT 'Medium',
+            priority_confidence INTEGER DEFAULT 0,
+            priority_source TEXT DEFAULT 'ai-rule-engine',
+            matched_keywords TEXT DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'Submitted',
+            date TEXT NOT NULL,
+            citizen_name TEXT,
+            citizen_email TEXT,
+            citizen_phone TEXT,
+            assigned_officer TEXT DEFAULT '',
+            assigned_officer_email TEXT DEFAULT '',
+            department TEXT,
+            remarks TEXT DEFAULT '',
+            resolution_notes TEXT DEFAULT '',
+            before_image TEXT DEFAULT '',
+            after_image TEXT DEFAULT ''
+        )
+    ''')
+    
     conn.commit()
     conn.close()
 
@@ -328,3 +360,112 @@ def login():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
+
+# ─── Complaint API Endpoints ───────────────────────────────────────────────────
+
+@app.route('/api/complaints', methods=['POST'])
+def create_complaint():
+    """Create a new complaint with automatic priority assignment."""
+    data = request.json
+    title = data.get('title')
+    description = data.get('description')
+    category = data.get('category')
+    location = data.get('location')
+    citizen_name = data.get('citizenName', '')
+    citizen_email = data.get('citizenEmail', '')
+    citizen_phone = data.get('citizenPhone', '')
+
+    if not title or not description or not category or not location:
+        return jsonify({"error": "Please provide title, description, category, and location."}), 400
+
+    # AI Priority Engine — automatically calculate priority
+    priority_result = calculate_priority(description, category)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Generate complaint ID
+    cursor.execute("SELECT COUNT(*) FROM complaints")
+    count = cursor.fetchone()[0]
+    complaint_id = f"GOV-2026-{1001 + count}"
+
+    import datetime
+    now = datetime.datetime.utcnow().isoformat() + "Z"
+
+    try:
+        cursor.execute('''
+            INSERT INTO complaints (id, title, description, category, location, 
+                                    latitude, longitude, priority, priority_confidence, 
+                                    priority_source, matched_keywords, status, date,
+                                    citizen_name, citizen_email, citizen_phone, department)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted', ?, ?, ?, ?, ?)
+        ''', (
+            complaint_id, title, description, category, location,
+            28.6 + (count * 0.01), 77.2 + (count * 0.01),
+            priority_result['priority'],
+            priority_result['confidence'],
+            priority_result['source'],
+            ','.join(priority_result['matched_keywords']),
+            now, citizen_name, citizen_email, citizen_phone, category
+        ))
+        conn.commit()
+
+        complaint = {
+            "id": complaint_id,
+            "title": title,
+            "description": description,
+            "category": category,
+            "location": location,
+            "priority": priority_result['priority'],
+            "priorityConfidence": priority_result['confidence'],
+            "prioritySource": priority_result['source'],
+            "matchedKeywords": priority_result['matched_keywords'],
+            "status": "Submitted",
+            "date": now,
+            "citizenName": citizen_name,
+            "citizenEmail": citizen_email,
+        }
+        conn.close()
+        return jsonify({"complaint": complaint, "message": "Complaint registered with auto-priority assignment."}), 201
+
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": f"Failed to create complaint: {str(e)}"}), 500
+
+
+@app.route('/api/complaints', methods=['GET'])
+def get_complaints():
+    """Get all complaints with optional priority filter."""
+    priority_filter = request.args.get('priority')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if priority_filter and priority_filter in ['High', 'Medium', 'Low']:
+        cursor.execute("SELECT * FROM complaints WHERE priority = ? ORDER BY date DESC", (priority_filter,))
+    else:
+        cursor.execute("SELECT * FROM complaints ORDER BY CASE priority WHEN 'High' THEN 0 WHEN 'Medium' THEN 1 WHEN 'Low' THEN 2 END, date DESC")
+
+    rows = cursor.fetchall()
+    complaints = [dict(row) for row in rows]
+    conn.close()
+
+    return jsonify({"complaints": complaints}), 200
+
+
+@app.route('/api/complaints/priority-stats', methods=['GET'])
+def get_priority_stats():
+    """Get complaint count breakdown by priority level."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT priority, COUNT(*) as count FROM complaints GROUP BY priority")
+    rows = cursor.fetchall()
+
+    stats = {"High": 0, "Medium": 0, "Low": 0}
+    for row in rows:
+        stats[row['priority']] = row['count']
+
+    conn.close()
+    return jsonify({"stats": stats, "total": sum(stats.values())}), 200

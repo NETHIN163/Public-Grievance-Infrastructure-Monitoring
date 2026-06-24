@@ -1,11 +1,27 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { INITIAL_COMPLAINTS } from '../../mockData';
+import { calculatePriority } from '../../services/priorityEngine';
 
 const getStoredComplaints = () => {
   const stored = localStorage.getItem('gov_complaints');
-  if (stored) return JSON.parse(stored);
-  localStorage.setItem('gov_complaints', JSON.stringify(INITIAL_COMPLAINTS));
-  return INITIAL_COMPLAINTS;
+  if (stored) {
+    // Re-calculate priority for any complaints missing prioritySource (migration)
+    const parsed = JSON.parse(stored);
+    return parsed.map(c => {
+      if (!c.prioritySource) {
+        const result = calculatePriority(c.description, c.category);
+        return { ...c, priority: c.priority || result.priority, prioritySource: result.source };
+      }
+      return c;
+    });
+  }
+  // Seed initial complaints with priority engine metadata
+  const seeded = INITIAL_COMPLAINTS.map(c => {
+    const result = calculatePriority(c.description, c.category);
+    return { ...c, priority: c.priority || result.priority, prioritySource: result.source };
+  });
+  localStorage.setItem('gov_complaints', JSON.stringify(seeded));
+  return seeded;
 };
 
 const initialState = {
@@ -21,6 +37,11 @@ const complaintsSlice = createSlice({
     addComplaint: (state, action) => {
       const { title, description, category, location, priority, citizenName, citizenEmail, citizenPhone } = action.payload;
       
+      // AI Priority Engine — compute priority from description + category
+      const priorityResult = calculatePriority(description, category);
+      // Use engine result, but allow explicit override if passed
+      const finalPriority = priority || priorityResult.priority || 'Medium';
+
       const newId = `GOV-2026-${1000 + state.complaints.length + 1}`;
       const newComplaint = {
         id: newId,
@@ -30,7 +51,10 @@ const complaintsSlice = createSlice({
         location,
         latitude: 28.6 + Math.random() * 0.1,
         longitude: 77.2 + Math.random() * 0.1,
-        priority: priority || 'Medium',
+        priority: finalPriority,
+        prioritySource: priorityResult.source,
+        priorityConfidence: priorityResult.confidence,
+        matchedKeywords: priorityResult.matchedKeywords,
         status: 'Submitted',
         date: new Date().toISOString(),
         citizenName,
@@ -47,7 +71,7 @@ const complaintsSlice = createSlice({
           {
             status: 'Submitted',
             date: new Date().toISOString(),
-            remarks: 'Complaint registered successfully by citizen. System Engine analyzed text.'
+            remarks: `Complaint registered successfully. AI Priority Engine assigned ${finalPriority} priority (${priorityResult.confidence}% confidence).`
           }
         ]
       };

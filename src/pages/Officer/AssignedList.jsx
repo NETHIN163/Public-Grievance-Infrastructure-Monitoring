@@ -11,19 +11,29 @@ export default function AssignedList() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [priorityFilter, setPriorityFilter] = useState('All');
 
   // Filter complaints assigned to this officer
   const myAssigned = complaints.filter(
     (c) => c.assignedOfficerEmail.toLowerCase() === (currentUser?.email || '').toLowerCase()
   );
 
-  const filteredCases = myAssigned.filter((c) => {
-    const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          c.citizenName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = statusFilter === 'All' || c.status === statusFilter;
-    return matchesSearch && matchesFilter;
-  });
+  const order = { High: 0, Medium: 1, Low: 2 };
+  
+  const filteredCases = myAssigned
+    .filter((c) => {
+      const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            c.citizenName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
+      const matchesPriority = priorityFilter === 'All' || c.priority === priorityFilter;
+      return matchesSearch && matchesStatus && matchesPriority;
+    })
+    .sort((a, b) => {
+      const priorityDiff = (order[a.priority] ?? 1) - (order[b.priority] ?? 1);
+      if (priorityDiff !== 0) return priorityDiff;
+      return new Date(b.date) - new Date(a.date);
+    });
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -54,20 +64,38 @@ export default function AssignedList() {
           />
         </div>
 
-        {/* Filter Dropdown */}
-        <div className="flex items-center space-x-2 w-full md:w-auto">
-          <Filter className="w-4 h-4 text-govMatte-muted flex-shrink-0" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full md:w-48 px-3.5 py-2 rounded-xl border border-govMatte-border focus:outline-none focus:border-govBlue/60 text-xs font-semibold bg-white"
-          >
-            <option value="All">All Statuses</option>
-            <option value="Assigned">Assigned</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Resolved">Resolved</option>
-            <option value="Closed">Closed</option>
-          </select>
+        {/* Filters Container */}
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          {/* Priority Filter Dropdown */}
+          <div className="flex items-center space-x-2 w-full md:w-auto">
+            <Filter className="w-4 h-4 text-govMatte-muted flex-shrink-0" />
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="w-full md:w-36 px-3.5 py-2 rounded-xl border border-govMatte-border focus:outline-none focus:border-govBlue/60 text-xs font-semibold bg-white"
+            >
+              <option value="All">All Priorities</option>
+              <option value="High">🔴 High</option>
+              <option value="Medium">🟡 Medium</option>
+              <option value="Low">🟢 Low</option>
+            </select>
+          </div>
+
+          {/* Status Filter Dropdown */}
+          <div className="flex items-center space-x-2 w-full md:w-auto">
+            <Filter className="w-4 h-4 text-govMatte-muted flex-shrink-0" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full md:w-40 px-3.5 py-2 rounded-xl border border-govMatte-border focus:outline-none focus:border-govBlue/60 text-xs font-semibold bg-white"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Assigned">Assigned</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
         </div>
 
       </div>
@@ -98,12 +126,13 @@ export default function AssignedList() {
                     <td className="py-3 px-4 text-slate-800">{c.citizenName}</td>
                     <td className="py-3 px-4 text-govMatte-muted">{c.category}</td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase ${
-                        c.priority === 'High' 
-                          ? 'bg-red-50 text-red-700 border border-red-100' 
-                          : 'bg-amber-50 text-amber-700 border border-amber-100'
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase flex items-center space-x-1 w-fit ${
+                        c.priority === 'High' ? 'bg-red-50 text-red-700 border border-red-100' :
+                        c.priority === 'Medium' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                        'bg-emerald-50 text-emerald-700 border border-emerald-100'
                       }`}>
-                        {c.priority}
+                        <span>{c.priority === 'High' ? '🔴' : c.priority === 'Medium' ? '🟡' : '🟢'}</span>
+                        <span>{c.priority}</span>
                       </span>
                     </td>
                     <td className="py-3 px-4">

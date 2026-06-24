@@ -142,6 +142,16 @@ export default function AdminDashboard() {
   const awaitingActionCount = localComplaints.filter(c => !c.assignedOfficer || c.status === 'Submitted').length;
   const overdueCount = localComplaints.filter(c => c.daysPending > 5).length;
 
+  const highPriorityCount = localComplaints.filter(c => c.priority === 'High').length;
+  const mediumPriorityCount = localComplaints.filter(c => c.priority === 'Medium').length;
+  const lowPriorityCount = localComplaints.filter(c => c.priority === 'Low').length;
+
+  const priorityData = [
+    { name: 'High Priority', value: highPriorityCount, color: '#ef4444' },
+    { name: 'Medium Priority', value: mediumPriorityCount, color: '#f59e0b' },
+    { name: 'Low Priority', value: lowPriorityCount, color: '#10b981' }
+  ];
+
   // Chart 1: Complaints by Status (Pie Donut Chart)
   const statusData = [
     { name: 'Submitted', value: localComplaints.filter(c => c.status === 'Submitted').length, color: '#f59e0b' },
@@ -349,6 +359,45 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Priority Summary Cards */}
+      <div className="row g-4 mt-1">
+        <div className="col-12 col-md-4">
+          <div className="card h-100 border-0 shadow-sm bg-white border-start border-danger border-3" style={{ borderRadius: '0.75rem' }}>
+            <div className="card-body p-3 d-flex align-items-center justify-content-between">
+              <div>
+                <p className="fs-4 fw-extrabold text-danger mb-0 font-sans">{highPriorityCount}</p>
+                <span className="text-xs font-bold text-govMatte-muted">High Priority Cases</span>
+              </div>
+              <span className="badge bg-danger text-white text-[9px] font-extrabold">🔴 HIGH</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-4">
+          <div className="card h-100 border-0 shadow-sm bg-white border-start border-3" style={{ borderRadius: '0.75rem', borderColor: '#f59e0b' }}>
+            <div className="card-body p-3 d-flex align-items-center justify-content-between">
+              <div>
+                <p className="fs-4 fw-extrabold mb-0 font-sans" style={{ color: '#f59e0b' }}>{mediumPriorityCount}</p>
+                <span className="text-xs font-bold text-govMatte-muted">Medium Priority Cases</span>
+              </div>
+              <span className="badge text-[9px] font-extrabold text-dark" style={{ backgroundColor: '#f59e0b' }}>🟡 MEDIUM</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-4">
+          <div className="card h-100 border-0 shadow-sm bg-white border-start border-success border-3" style={{ borderRadius: '0.75rem' }}>
+            <div className="card-body p-3 d-flex align-items-center justify-content-between">
+              <div>
+                <p className="fs-4 fw-extrabold text-success mb-0 font-sans">{lowPriorityCount}</p>
+                <span className="text-xs font-bold text-govMatte-muted">Low Priority Cases</span>
+              </div>
+              <span className="badge bg-success text-white text-[9px] font-extrabold">🟢 LOW</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Escalation Summary Widget banner */}
       <div className="card border-0 shadow-sm text-dark bg-light" style={{ borderRadius: '1rem', border: '1px solid #cbd5e1' }}>
         <div className="card-body p-4">
@@ -376,7 +425,7 @@ export default function AdminDashboard() {
       {/* Recharts Analytics Grid */}
       <div className="row g-4">
         {/* Complaints by Status */}
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-6 col-lg-3">
           <div className="card border-0 shadow-sm bg-white h-100" style={{ borderRadius: '1rem' }}>
             <div className="card-body p-4 d-flex flex-column">
               <h5 className="card-title text-xs font-extrabold text-govBlue uppercase tracking-wider mb-4">Complaints by Status</h5>
@@ -405,8 +454,38 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Priority Distribution */}
+        <div className="col-12 col-md-6 col-lg-3">
+          <div className="card border-0 shadow-sm bg-white h-100" style={{ borderRadius: '1rem' }}>
+            <div className="card-body p-4 d-flex flex-column">
+              <h5 className="card-title text-xs font-extrabold text-govBlue uppercase tracking-wider mb-4">Priority Distribution</h5>
+              <div className="flex-grow-1 w-full h-64 text-[10px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={priorityData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={75}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {priorityData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ fontSize: '10px' }} />
+                    <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: '9px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Escalation Level Distribution */}
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-6 col-lg-3">
           <div className="card border-0 shadow-sm bg-white h-100" style={{ borderRadius: '1rem' }}>
             <div className="card-body p-4 d-flex flex-column">
               <h5 className="card-title text-xs font-extrabold text-govBlue uppercase tracking-wider mb-4">Escalation Distribution</h5>
@@ -429,7 +508,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Monthly Complaint Trends */}
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-6 col-lg-3">
           <div className="card border-0 shadow-sm bg-white h-100" style={{ borderRadius: '1rem' }}>
             <div className="card-body p-4 d-flex flex-column">
               <h5 className="card-title text-xs font-extrabold text-govBlue uppercase tracking-wider mb-4">Monthly Complaint Trends</h5>
@@ -554,14 +633,15 @@ export default function AdminDashboard() {
                       
                       {/* Priority */}
                       <td className="py-3 px-3">
-                        <span className={`badge text-[9px] font-extrabold uppercase py-1 px-2 ${
+                        <span className={`badge text-[9px] font-extrabold uppercase py-1 px-2.5 d-inline-flex align-items-center gap-1 ${
                           c.priority === 'High' 
                             ? 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20' 
                             : c.priority === 'Medium'
                               ? 'bg-warning bg-opacity-15 text-warning-emphasis border border-warning border-opacity-20'
-                              : 'bg-secondary bg-opacity-10 text-secondary-emphasis border border-secondary border-opacity-20'
+                              : 'bg-success bg-opacity-10 text-success border border-success border-opacity-20'
                         }`}>
-                          {c.priority}
+                          <span>{c.priority === 'High' ? '🔴' : c.priority === 'Medium' ? '🟡' : '🟢'}</span>
+                          <span>{c.priority}</span>
                         </span>
                       </td>
                       

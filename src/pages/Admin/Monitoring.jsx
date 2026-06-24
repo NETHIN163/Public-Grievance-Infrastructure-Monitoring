@@ -73,16 +73,24 @@ export default function Monitoring() {
   const [targetComplaint, setTargetComplaint] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', category: '', priority: '', location: '' });
 
-  const filteredGrievances = complaints.filter((c) => {
-    const matchesSearch =
-      c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.citizenName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCat = catFilter === 'All' || c.category === catFilter;
-    const matchesPriority = priorityFilter === 'All' || c.priority === priorityFilter;
-    const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
-    return matchesSearch && matchesCat && matchesPriority && matchesStatus;
-  });
+  const priorityOrder = { High: 0, Medium: 1, Low: 2 };
+
+  const filteredGrievances = complaints
+    .filter((c) => {
+      const matchesSearch =
+        c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.citizenName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCat = catFilter === 'All' || c.category === catFilter;
+      const matchesPriority = priorityFilter === 'All' || c.priority === priorityFilter;
+      const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
+      return matchesSearch && matchesCat && matchesPriority && matchesStatus;
+    })
+    .sort((a, b) => {
+      const priorityDiff = (priorityOrder[a.priority] ?? 1) - (priorityOrder[b.priority] ?? 1);
+      if (priorityDiff !== 0) return priorityDiff;
+      return new Date(b.date) - new Date(a.date);
+    });
 
   const flash = (msg) => { setSuccessMsg(msg); setTimeout(() => setSuccessMsg(''), 4000); };
 
@@ -157,7 +165,7 @@ export default function Monitoring() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold text-govMatte-text">
           {[
             { label: 'Category Filter', value: catFilter, setter: setCatFilter, options: ['All', ...CATEGORIES] },
-            { label: 'Priority Filter', value: priorityFilter, setter: setPriorityFilter, options: ['All', 'High Urgency', 'Medium Urgency', 'Low Urgency'], rawValues: ['All', 'High', 'Medium', 'Low'] },
+            { label: 'Priority Filter', value: priorityFilter, setter: setPriorityFilter, options: ['All', '🔴 High Urgency', '🟡 Medium Urgency', '🟢 Low Urgency'], rawValues: ['All', 'High', 'Medium', 'Low'] },
             { label: 'Work Status Filter', value: statusFilter, setter: setStatusFilter, options: ['All', 'Submitted', 'Under Review', 'Assigned', 'In Progress', 'Resolved', 'Closed'] },
           ].map(({ label, value, setter, options, rawValues }) => (
             <div key={label} className="space-y-1">
@@ -208,12 +216,15 @@ export default function Monitoring() {
                     </td>
                     <td className="py-3 px-4 text-govMatte-muted">{c.category}</td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase ${c.priority === 'High'
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase flex items-center space-x-1 w-fit ${c.priority === 'High'
                           ? 'bg-red-50 text-red-700 border border-red-100'
                           : c.priority === 'Medium'
                             ? 'bg-amber-50 text-amber-700 border border-amber-100'
-                            : 'bg-slate-50 text-slate-600 border border-slate-200'
-                        }`}>{c.priority}</span>
+                            : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        }`}>
+                        <span>{c.priority === 'High' ? '🔴' : c.priority === 'Medium' ? '🟡' : '🟢'}</span>
+                        <span>{c.priority}</span>
+                      </span>
                     </td>
                     <td className="py-3 px-4 text-govMatte-muted max-w-[120px] truncate">
                       {c.location.split(',').slice(-1)[0].trim()}
