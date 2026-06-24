@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { 
   FileText, CheckCircle2, BarChart3,
-  AlertTriangle, ShieldAlert, Clock, RefreshCw, Eye, ArrowUpRight
+  AlertTriangle, ShieldAlert, Clock, RefreshCw, Eye, ArrowUpRight, ArrowDownRight, ArrowDownLeft
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -95,6 +95,44 @@ export default function AdminDashboard() {
     setLocalComplaints(prev => prev.map(c => {
       if (c.id === complaintId) {
         return { ...c, priority: 'High' };
+      }
+      return c;
+    }));
+  };
+
+  const handleLowerPriority = (complaintId) => {
+    setLocalComplaints(prev => prev.map(c => {
+      if (c.id === complaintId) {
+        const nextPriority = c.priority === 'High' ? 'Medium' : 'Low';
+        return { ...c, priority: nextPriority };
+      }
+      return c;
+    }));
+  };
+
+  const handleDeescalate = (complaintId) => {
+    setLocalComplaints(prev => prev.map(c => {
+      if (c.id === complaintId) {
+        const currentLevel = c.escalationLevel;
+        const nextLevel = currentLevel > 0 ? currentLevel - 1 : 0;
+        
+        // Append de-escalation step to timeline if level changes
+        const updatedTimeline = [...c.timeline];
+        if (nextLevel < currentLevel) {
+          updatedTimeline.push({
+            status: nextLevel === 0 ? 'De-escalated to Normal' : `De-escalated to Level ${nextLevel}`,
+            date: new Date().toISOString(),
+            remarks: nextLevel === 0 
+              ? 'Urgency level de-escalated to Normal by Administrator' 
+              : `Urgency level de-escalated to Level ${nextLevel} by Administrator`
+          });
+        }
+
+        return {
+          ...c,
+          escalationLevel: nextLevel,
+          timeline: updatedTimeline
+        };
       }
       return c;
     }));
@@ -679,6 +717,17 @@ export default function AdminDashboard() {
                             <span>High</span>
                           </button>
 
+                          {/* Lower Priority */}
+                          <button
+                            onClick={() => handleLowerPriority(c.id)}
+                            disabled={c.priority === 'Low'}
+                            title="Lower Priority"
+                            className="btn btn-outline-success btn-sm py-1 px-2 text-[10px] d-flex align-items-center gap-1 font-bold"
+                          >
+                            <ArrowDownRight className="w-3.5 h-3.5" />
+                            <span>Lower</span>
+                          </button>
+
                           {/* Escalate */}
                           <button
                             onClick={() => handleEscalateFurther(c.id)}
@@ -688,6 +737,17 @@ export default function AdminDashboard() {
                           >
                             <ShieldAlert className="w-3.5 h-3.5" />
                             <span>Escalate</span>
+                          </button>
+
+                          {/* De-escalate */}
+                          <button
+                            onClick={() => handleDeescalate(c.id)}
+                            disabled={c.escalationLevel === 0}
+                            title="De-escalate"
+                            className="btn btn-outline-info btn-sm py-1 px-2 text-[10px] d-flex align-items-center gap-1 font-bold"
+                          >
+                            <ArrowDownLeft className="w-3.5 h-3.5" />
+                            <span>De-escalate</span>
                           </button>
                         </div>
                       </td>
