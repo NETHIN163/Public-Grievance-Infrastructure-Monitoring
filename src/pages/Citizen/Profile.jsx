@@ -13,7 +13,7 @@ export default function Profile() {
   const [form, setForm] = useState({
     name: currentUser?.name || '',
     phone: currentUser?.phone || '',
-    area: currentUser?.area || 'Zone A - Central Delhi'
+    area: currentUser?.area || 'Coimbatore Central Zone'
   });
   
   const [passForm, setPassForm] = useState({
@@ -148,11 +148,11 @@ export default function Profile() {
                     onChange={(e) => setForm({ ...form, area: e.target.value })}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-govMatte-border focus:outline-none focus:border-govBlue/60 bg-white font-medium"
                   >
-                    <option value="Zone A - Central Delhi">Zone A - Central Delhi</option>
-                    <option value="Zone B - South Delhi">Zone B - South Delhi</option>
-                    <option value="Zone C - West Delhi">Zone C - West Delhi</option>
-                    <option value="Zone D - East Delhi">Zone D - East Delhi</option>
-                    <option value="Zone E - North Delhi">Zone E - North Delhi</option>
+                    <option value="Coimbatore Central Zone">Coimbatore Central Zone</option>
+                    <option value="Coimbatore South Zone">Coimbatore South Zone</option>
+                    <option value="Coimbatore West Zone">Coimbatore West Zone</option>
+                    <option value="Coimbatore East Zone">Coimbatore East Zone</option>
+                    <option value="Coimbatore North Zone">Coimbatore North Zone</option>
                   </select>
                 </div>
               </div>

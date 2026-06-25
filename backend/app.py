@@ -55,12 +55,12 @@ def init_db():
     
     # Seed default users if they don't exist
     seed_users = [
-        ("user-1", "Aarav Sharma", "citizen@gov.in", None, "citizen", "AS", "active", "Zone A - Central Delhi", "2026-01-15"),
-        ("user-2", "Nethra Swathi", "nethraswathi17@gmail.com", "nethrasara", "officer", "NS", "active", "Zone A - Central Delhi", "2025-11-20"),
-        ("user-3", "Dr. Sunita Rao", "officer2@gov.in", None, "officer", "SR", "active", "Zone B - South Delhi", "2025-12-05"),
+        ("user-1", "Aarav Sharma", "citizen@gov.in", None, "citizen", "AS", "active", "Coimbatore Central Zone", "2026-01-15"),
+        ("user-2", "Nethra Swathi", "nethraswathi17@gmail.com", "nethrasara", "officer", "NS", "active", "Coimbatore Central Zone", "2025-11-20"),
+        ("user-3", "Dr. Sunita Rao", "officer2@gov.in", None, "officer", "SR", "active", "Coimbatore South Zone", "2025-12-05"),
         ("user-4", "Deepak Verma", "officer3@gov.in", None, "officer", "DV", "active", "Waste Management", "2026-02-10"),
         ("user-5", "Nethin Admin", "nethin163@gmail.com", "9894506871", "admin", "NA", "active", "National Headquarters", "2025-08-01"),
-        ("user-6", "Priya Patel", "priya@example.com", None, "citizen", "PP", "active", "Zone B - South Delhi", "2026-03-22")
+        ("user-6", "Priya Patel", "priya@example.com", None, "citizen", "PP", "active", "Coimbatore South Zone", "2026-03-22")
     ]
     
     for u_id, name, email, password, role, avatar, status, area, date_joined in seed_users:
@@ -130,7 +130,6 @@ def send_otp_email(to_email, otp):
                 <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                     <div style="text-align: center; border-bottom: 2px solid #3b82f6; padding-bottom: 15px;">
                         <h2 style="color: #1e3a8a; margin: 0;">Grievance REDRESSAL CELL</h2>
-                        <span style="font-size: 10px; font-weight: bold; color: #64748b; letter-spacing: 1px; text-transform: uppercase;">Ministry of Urban Governance</span>
                     </div>
                     <div style="padding: 20px 0;">
                         <p style="margin: 0 0 10px 0; font-size: 14px;">Greetings,</p>
@@ -255,7 +254,7 @@ def verify_otp():
     try:
         cursor.execute('''
             INSERT INTO users (id, name, email, password, role, avatar, status, area, date_joined)
-            VALUES (?, ?, ?, ?, 'citizen', ?, 'active', 'Zone A - Central Delhi', ?)
+            VALUES (?, ?, ?, ?, 'citizen', ?, 'active', 'Coimbatore Central Zone', ?)
         ''', (u_id, name, email.lower().strip(), password, avatar, date_joined))
         
         # Remove from temp storage

@@ -26,7 +26,6 @@ async function sendTestEmail() {
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:30px;background:#ffffff;border-radius:12px;border:1px solid #e2e8f0">
         <div style="text-align:center;border-bottom:2px solid #3b82f6;padding-bottom:15px;margin-bottom:20px">
           <h2 style="color:#1e3a8a;margin:0">Grievance REDRESSAL CELL</h2>
-          <span style="font-size:10px;color:#64748b;letter-spacing:1px;text-transform:uppercase">Ministry of Urban Governance</span>
         </div>
         <p style="font-size:14px;color:#1e293b">Greetings,</p>
         <p style="font-size:14px;color:#1e293b">Your 6-digit OTP verification code is:</p>

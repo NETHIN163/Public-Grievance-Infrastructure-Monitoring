@@ -19,7 +19,7 @@ export default function OfficersManager() {
     email: '',
     phone: '',
     department: 'Roads & Highways',
-    area: 'Zone A - Central Delhi'
+    area: 'Coimbatore Central Zone'
   });
 
   const [success, setSuccess] = useState('');
@@ -62,7 +62,7 @@ export default function OfficersManager() {
     }));
 
     setSuccess(`Officer ${form.name} registered and deployed to ${form.department}.`);
-    setForm({ name: '', email: '', phone: '', department: 'Roads & Highways', area: 'Zone A - Central Delhi' });
+    setForm({ name: '', email: '', phone: '', department: 'Roads & Highways', area: 'Coimbatore Central Zone' });
     setShowAddForm(false);
     setTimeout(() => setSuccess(''), 4000);
   };
@@ -97,7 +97,7 @@ export default function OfficersManager() {
 
     setSuccess(`Officer ${form.name} workspace details updated.`);
     setEditingOfficer(null);
-    setForm({ name: '', email: '', phone: '', department: 'Roads & Highways', area: 'Zone A - Central Delhi' });
+    setForm({ name: '', email: '', phone: '', department: 'Roads & Highways', area: 'Coimbatore Central Zone' });
     setShowAddForm(false);
     setTimeout(() => setSuccess(''), 4000);
   };
@@ -201,11 +201,11 @@ export default function OfficersManager() {
                   onChange={(e) => setForm({ ...form, area: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-govMatte-border focus:outline-none focus:border-govBlue/60 bg-white font-medium"
                 >
-                  <option value="Zone A - Central Delhi">Zone A - Central Delhi</option>
-                  <option value="Zone B - South Delhi">Zone B - South Delhi</option>
-                  <option value="Zone C - West Delhi">Zone C - West Delhi</option>
-                  <option value="Zone D - East Delhi">Zone D - East Delhi</option>
-                  <option value="Zone E - North Delhi">Zone E - North Delhi</option>
+                  <option value="Coimbatore Central Zone">Coimbatore Central Zone</option>
+                  <option value="Coimbatore South Zone">Coimbatore South Zone</option>
+                  <option value="Coimbatore West Zone">Coimbatore West Zone</option>
+                  <option value="Coimbatore East Zone">Coimbatore East Zone</option>
+                  <option value="Coimbatore North Zone">Coimbatore North Zone</option>
                 </select>
               </div>
             </div>
@@ -222,7 +222,7 @@ export default function OfficersManager() {
                 onClick={() => {
                   setShowAddForm(false);
                   setEditingOfficer(null);
-                  setForm({ name: '', email: '', phone: '', department: 'Roads & Highways', area: 'Zone A - Central Delhi' });
+                  setForm({ name: '', email: '', phone: '', department: 'Roads & Highways', area: 'Coimbatore Central Zone' });
                 }}
                 className="px-6 py-2.5 bg-white border border-govMatte-border text-govMatte-text font-bold rounded-xl hover:bg-slate-50 transition-all"
               >

@@ -19,7 +19,6 @@ const buildOTPEmailHTML = (otp) => `
       <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
         <div style="text-align: center; border-bottom: 2px solid #3b82f6; padding-bottom: 15px;">
           <h2 style="color: #1e3a8a; margin: 0;">Grievance REDRESSAL CELL</h2>
-          <span style="font-size: 10px; font-weight: bold; color: #64748b; letter-spacing: 1px; text-transform: uppercase;">Ministry of Urban Governance</span>
         </div>
         <div style="padding: 20px 0;">
           <p style="margin: 0 0 10px 0; font-size: 14px;">Greetings,</p>
@@ -228,7 +227,7 @@ const AuthController = {
         role: 'citizen',
         avatar,
         status: 'active',
-        area: 'Zone A - Central Delhi',
+        area: 'Coimbatore Central Zone',
         dateJoined
       });
 

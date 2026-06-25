@@ -113,10 +113,10 @@ export default function Login() {
           </div>
           <div className="space-y-1">
             <h1 className="text-sm font-extrabold text-govGreen uppercase tracking-wider">
-              PGIMS
+              NGP
             </h1>
             <h2 className="text-[13px] font-extrabold text-govBlue font-sans uppercase leading-tight tracking-wide">
-              Public Grievance &amp; Infrastructure Monitoring
+              National Grievance Portal
             </h2>
             <p className="text-[10px] text-govMatte-muted uppercase tracking-widest font-bold">
               Secure Access Portal

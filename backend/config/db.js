@@ -120,7 +120,7 @@ const initDb = async () => {
           role: 'citizen',
           avatar: 'AS',
           status: 'active',
-          area: 'Zone A - Central Delhi',
+          area: 'Coimbatore Central Zone',
           date_joined: '2026-01-15',
         },
         {
@@ -132,7 +132,7 @@ const initDb = async () => {
           role: 'officer',
           avatar: 'NS',
           status: 'active',
-          area: 'Zone A - Central Delhi',
+          area: 'Coimbatore Central Zone',
           date_joined: '2025-11-20',
         },
         {
@@ -144,7 +144,7 @@ const initDb = async () => {
           role: 'officer',
           avatar: 'SR',
           status: 'active',
-          area: 'Zone B - South Delhi',
+          area: 'Coimbatore South Zone',
           date_joined: '2025-12-05',
         },
         {
@@ -156,7 +156,7 @@ const initDb = async () => {
           role: 'officer',
           avatar: 'DV',
           status: 'active',
-          area: 'Zone C - West Delhi',
+          area: 'Coimbatore West Zone',
           date_joined: '2026-02-10',
         },
         {
@@ -180,7 +180,7 @@ const initDb = async () => {
           role: 'citizen',
           avatar: 'PP',
           status: 'active',
-          area: 'Zone B - South Delhi',
+          area: 'Coimbatore South Zone',
           date_joined: '2026-03-22',
         },
         {
@@ -192,7 +192,7 @@ const initDb = async () => {
           role: 'citizen',
           avatar: 'KJ',
           status: 'blocked',
-          area: 'Zone C - West Delhi',
+          area: 'Coimbatore West Zone',
           date_joined: '2026-04-05',
         },
       ];

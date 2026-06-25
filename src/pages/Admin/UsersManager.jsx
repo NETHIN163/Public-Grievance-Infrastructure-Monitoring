@@ -10,11 +10,11 @@ import Card from '../../components/Shared/Card';
 import Alert from '../../components/Shared/Alert';
 
 const AREA_ZONES = [
-  'Zone A - Central Delhi',
-  'Zone B - South Delhi',
-  'Zone C - West Delhi',
-  'Zone D - East Delhi',
-  'Zone E - North Delhi',
+  'Coimbatore Central Zone',
+  'Coimbatore South Zone',
+  'Coimbatore West Zone',
+  'Coimbatore East Zone',
+  'Coimbatore North Zone',
 ];
 
 // ─── Reusable Modal Shell ──────────────────────────────────────────────────────

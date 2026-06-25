@@ -67,12 +67,9 @@ export default function Navbar() {
               </svg>
             </div>
             <div className="hidden md:block">
-              <h1 className="text-sm font-extrabold text-govBlue tracking-wide uppercase leading-none">
+              <h1 className="text-sm font-extrabold text-govBlue tracking-wide uppercase">
                 National Grievance Portal
               </h1>
-              <span className="text-[10px] text-govGreen font-semibold tracking-wider uppercase block mt-0.5">
-                Infrastructure Monitor
-              </span>
             </div>
           </Link>
         </div>
@@ -181,7 +178,7 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center space-x-2">
-              <Link to="/login" className="px-4 py-1.5 rounded-full text-xs font-semibold text-govBlue-light hover:bg-white/5 transition-all">
+              <Link to="/login" className="px-4 py-1.5 rounded-full text-xs font-semibold text-govBlue hover:bg-slate-50 transition-all">
                 Login
               </Link>
               <Link to="/register" className="px-4 py-1.5 rounded-full text-xs font-semibold bg-govGreen text-black hover:bg-govGreen-light transition-all shadow-md shadow-govGreen/10">

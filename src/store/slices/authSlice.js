@@ -217,7 +217,7 @@ const authSlice = createSlice({
         role: 'citizen',
         avatar: name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
         status: 'active',
-        area: 'Zone A - Central Delhi',
+        area: 'Coimbatore Central Zone',
         dateJoined: new Date().toISOString().split('T')[0]
       };
       state.users.push(newUser);

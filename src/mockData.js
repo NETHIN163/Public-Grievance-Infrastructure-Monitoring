@@ -9,7 +9,7 @@ export const INITIAL_USERS = [
     role: "citizen",
     avatar: "AS",
     status: "active",
-    area: "Zone A - Central Delhi",
+    area: "Coimbatore Central Zone",
     dateJoined: "2026-01-15"
   },
   {
@@ -22,7 +22,7 @@ export const INITIAL_USERS = [
     avatar: "NS",
     status: "active",
     department: "Roads & Highways",
-    area: "Zone A - Central Delhi",
+    area: "Coimbatore Central Zone",
     dateJoined: "2025-11-20"
   },
   {
@@ -34,7 +34,7 @@ export const INITIAL_USERS = [
     avatar: "SR",
     status: "active",
     department: "Water Supply & Sanitation",
-    area: "Zone B - South Delhi",
+    area: "Coimbatore South Zone",
     dateJoined: "2025-12-05"
   },
   {
@@ -46,7 +46,7 @@ export const INITIAL_USERS = [
     avatar: "DV",
     status: "active",
     department: "Waste Management",
-    area: "Zone C - West Delhi",
+    area: "Coimbatore West Zone",
     dateJoined: "2026-02-10"
   },
   {
@@ -69,7 +69,7 @@ export const INITIAL_USERS = [
     role: "citizen",
     avatar: "PP",
     status: "active",
-    area: "Zone B - South Delhi",
+    area: "Coimbatore South Zone",
     dateJoined: "2026-03-22"
   },
   {
@@ -80,7 +80,7 @@ export const INITIAL_USERS = [
     role: "citizen",
     avatar: "KJ",
     status: "blocked",
-    area: "Zone C - West Delhi",
+    area: "Coimbatore West Zone",
     dateJoined: "2026-04-05"
   }
 ];
@@ -91,7 +91,7 @@ export const INITIAL_COMPLAINTS = [
     title: "Hazardous Deep Potholes on Main Ring Road",
     description: "There are multiple deep potholes near the flyover exit. They are extremely dangerous, especially at night and during rains. Multiple two-wheelers have met with accidents here in the last 48 hours.",
     category: "Roads & Highways",
-    location: "Ring Road, Near Sector 5 Flyover Exit, Zone A - Central Delhi",
+    location: "Ring Road, Near Sector 5 Flyover Exit, Coimbatore Central Zone",
     latitude: 28.6139,
     longitude: 77.2090,
     priority: "High",
@@ -118,7 +118,7 @@ export const INITIAL_COMPLAINTS = [
     title: "Contaminated Water Supply in Block C",
     description: "The tap water supplied to Block C apartments has a yellowish tint and a foul chemical odor. It is completely unfit for consumption. Several children in the neighborhood are reporting stomach upsets.",
     category: "Water Supply & Sanitation",
-    location: "Block C, Pragati Vihar, Zone B - South Delhi",
+    location: "Block C, Pragati Vihar, Coimbatore South Zone",
     latitude: 28.5800,
     longitude: 77.2200,
     priority: "High",
@@ -146,7 +146,7 @@ export const INITIAL_COMPLAINTS = [
     title: "Broken Streetlight Near Public Park",
     description: "The streetlight at the entrance of Netaji Park has been non-functional for the past two weeks. The entire street is Pitch dark, raising safety concerns for women and elderly walking in the evening.",
     category: "Electricity & Power",
-    location: "Gate No. 2, Netaji Subhash Park, Zone A - Central Delhi",
+    location: "Gate No. 2, Netaji Subhash Park, Coimbatore Central Zone",
     latitude: 28.6250,
     longitude: 77.2150,
     priority: "Medium",
@@ -175,7 +175,7 @@ export const INITIAL_COMPLAINTS = [
     title: "Piled Up Unattended Garbage Dump",
     description: "Garbage is overflowing from the municipal bin onto the main street. Stray animals are scattering it everywhere, causing a horrible stench and creating an extremely unhygienic breeding ground for mosquitoes.",
     category: "Waste Management",
-    location: "Opposite Sector 4 Metro Station, Zone C - West Delhi",
+    location: "Opposite Sector 4 Metro Station, Coimbatore West Zone",
     latitude: 28.6300,
     longitude: 77.1200,
     priority: "Medium",
@@ -200,7 +200,7 @@ export const INITIAL_COMPLAINTS = [
     title: "Open Manhole on Sidewalk",
     description: "A main sewage manhole cover is broken on the active pedestrian sidewalk, creating a deadly drop-trap. There are no barricades or warning signs around it.",
     category: "Water Supply & Sanitation",
-    location: "Kasturba Gandhi Marg, Near metro gate 4, Zone A - Central Delhi",
+    location: "Kasturba Gandhi Marg, Near metro gate 4, Coimbatore Central Zone",
     latitude: 28.6220,
     longitude: 77.2280,
     priority: "High",

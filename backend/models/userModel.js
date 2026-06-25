@@ -28,7 +28,7 @@ const UserModel = {
         role || 'citizen',
         avatar || '',
         status || 'active',
-        area || 'Zone A - Central Delhi',
+        area || 'Coimbatore Central Zone',
         dateJoined || new Date().toISOString().split('T')[0],
       ]
     );
