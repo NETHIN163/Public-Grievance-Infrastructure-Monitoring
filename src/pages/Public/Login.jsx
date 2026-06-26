@@ -7,6 +7,8 @@ import { addSecurityAlert, addAuditLog } from '../../store/slices/securitySlice'
 import Alert from '../../components/Shared/Alert';
 import Card from '../../components/Shared/Card';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -57,7 +59,7 @@ export default function Login() {
 
     // Step 1: Validate credentials with backend first
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: userEmail, password }),
