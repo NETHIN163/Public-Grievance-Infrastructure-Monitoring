@@ -10,17 +10,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS — allow frontend origins
+// Enable CORS — allow localhost (dev), Render, and Vercel domains (production)
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://localhost:5000',
   'https://grievance-frontend-8jsg.onrender.com',
 ];
+const allowedPatterns = [/\.vercel\.app$/];
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (e.g., curl, Postman, mobile apps)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (allowedPatterns.some(pattern => pattern.test(origin))) return callback(null, true);
     return callback(new Error(`CORS policy: Origin ${origin} not allowed`));
   },
   credentials: true,
@@ -63,4 +66,10 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only start the server when running directly (not when imported by Cloud Functions)
+if (require.main === module) {
+  startServer();
+}
+
+// Export the app for Firebase Cloud Functions (functions/index.js)
+module.exports = app;

@@ -26,6 +26,7 @@ dist-sr
 # Environment variables — NEVER commit these (contains passwords)
 .env
 backend/.env
+functions/.env
 
 # SQLite database (local only)
 backend/database.db
