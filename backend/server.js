@@ -10,8 +10,21 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS
-app.use(cors());
+// Enable CORS — allow frontend origins
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://grievance-frontend-8jsg.onrender.com',
+];
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., curl, Postman, mobile apps)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS policy: Origin ${origin} not allowed`));
+  },
+  credentials: true,
+}));
 
 // Body parser middleware
 app.use(express.json());
