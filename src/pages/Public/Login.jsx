@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ShieldCheck, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { clearError, resendOTP } from '../../store/slices/authSlice';
+import { clearError } from '../../store/slices/authSlice';
 import { addSecurityAlert, addAuditLog } from '../../store/slices/securitySlice';
 import Alert from '../../components/Shared/Alert';
 import Card from '../../components/Shared/Card';
@@ -12,7 +12,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { currentUser, error, loading } = useSelector((state) => state.auth);
+  const { currentUser, error } = useSelector((state) => state.auth);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,16 +20,12 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [loginError, setLoginError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Clear leftover auth errors
     dispatch(clearError());
-
-    // Block browser back button
     window.history.pushState(null, '', window.location.href);
-    const handlePopState = () => {
-      window.history.pushState(null, '', window.location.href);
-    };
+    const handlePopState = () => window.history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [dispatch]);
@@ -43,7 +39,6 @@ export default function Login() {
         oldValue: 'Session: Offline',
         newValue: `Session: Online (IP logged)`
       }));
-
       if (currentUser.role === 'citizen') navigate('/citizen/dashboard');
       if (currentUser.role === 'officer') navigate('/officer/dashboard');
       if (currentUser.role === 'admin') navigate('/admin/dashboard');
@@ -54,10 +49,10 @@ export default function Login() {
     e.preventDefault();
     setLoginError('');
     dispatch(clearError());
-    
+    setIsLoading(true);
+
     const userEmail = email.toLowerCase().trim();
 
-    // Step 1: Validate credentials with backend first
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
@@ -67,40 +62,31 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Backend rejected credentials
         const currentAttempts = failedAttempts + 1;
         setFailedAttempts(currentAttempts);
-        if (currentAttempts >= 3) {
-          dispatch(addSecurityAlert({
-            user: userEmail || 'anonymous',
-            activity: `Brute Force Suspected (${currentAttempts} failed logins)`,
-            riskLevel: 'High',
-            details: `Repetitive wrong passwords submitted. Security protocol triggered.`
-          }));
-        } else {
-          dispatch(addSecurityAlert({
-            user: userEmail || 'anonymous',
-            activity: 'Failed Login Attempt (Password mismatch)',
-            riskLevel: 'Low',
-            details: `Invalid login parameters recorded.`
-          }));
-        }
+        dispatch(addSecurityAlert({
+          user: userEmail || 'anonymous',
+          activity: currentAttempts >= 3
+            ? `Brute Force Suspected (${currentAttempts} failed logins)`
+            : 'Failed Login Attempt (Password mismatch)',
+          riskLevel: currentAttempts >= 3 ? 'High' : 'Low',
+          details: `Invalid login parameters recorded.`
+        }));
         setLoginError(data.error || 'Invalid credentials. Please verify and try again.');
         return;
       }
 
-      // Step 2: Credentials valid — send OTP to user's email for 2FA
-      dispatch(resendOTP(userEmail))
-        .unwrap()
-        .then(() => {
-          navigate('/otp-verify', { state: { resetEmail: userEmail, password } });
-        })
-        .catch((err) => {
-          setLoginError(err || 'Failed to dispatch verification code.');
-        });
+      const { user, token } = data;
+      if (user) {
+        const sessionData = { ...user, token };
+        localStorage.setItem('gov_session', JSON.stringify(sessionData));
+        dispatch({ type: 'auth/loginUser/fulfilled', payload: { user, token } });
+      }
 
     } catch (err) {
       setLoginError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -108,7 +94,6 @@ export default function Login() {
     <div className="max-w-md mx-auto px-4 py-12 animate-fade-in">
       <Card className="shadow-lg">
         
-        {/* Crest & Title */}
         <div className="text-center space-y-3 mb-6">
           <div className="w-12 h-12 rounded-2xl bg-govBlue text-white flex items-center justify-center mx-auto shadow-md transform hover:scale-105 transition-transform duration-200">
             <ShieldCheck className="w-7 h-7" />
@@ -134,7 +119,6 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs font-semibold text-govMatte-text">
           
-          {/* Registered Email field */}
           <div className="space-y-1 text-left">
             <label htmlFor="email" className="block text-govMatte-muted">Registered Email Address</label>
             <div className="relative">
@@ -153,7 +137,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Password field */}
           <div className="space-y-1 text-left">
             <div className="flex items-center justify-between">
               <label htmlFor="password" className="block text-govMatte-muted">Account Password</label>
@@ -184,7 +167,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Remember Me */}
           <div className="flex items-center text-left">
             <input
               id="remember-me"
@@ -198,13 +180,12 @@ export default function Login() {
             </label>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={isLoading}
             className="w-full py-2.5 bg-govBlue hover:bg-govBlue-light text-white font-bold rounded-xl shadow-md shadow-govBlue/15 flex items-center justify-center space-x-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
           >
-            <span>{loading ? "Verifying..." : "Secure Login"}</span>
+            <span>{isLoading ? "Verifying..." : "Secure Login"}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
