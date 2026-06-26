@@ -322,9 +322,9 @@ export default function Home() {
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase text-white tracking-widest">Legal Details</h4>
             <div className="flex flex-col gap-2 text-xs">
-              <a href="#" className="hover:text-white transition-colors">Terms of Use</a>
-              <a href="#" className="hover:text-white transition-colors">Privacy Guidelines</a>
-              <a href="#" className="hover:text-white transition-colors">Cookie Policies</a>
+              <Link to="/terms" className="hover:text-white transition-colors">Terms of Use</Link>
+              <Link to="/privacy" className="hover:text-white transition-colors">Privacy Guidelines</Link>
+              <Link to="/cookies" className="hover:text-white transition-colors">Cookie Policies</Link>
             </div>
           </div>
 
