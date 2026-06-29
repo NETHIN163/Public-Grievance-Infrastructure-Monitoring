@@ -44,14 +44,14 @@ export default function Register() {
       return;
     }
 
-    // Call API to send OTP, then route to OTPVerify on success
+    // Register user directly and navigate to login
     dispatch(registerUser(form))
       .unwrap()
-      .then((data) => {
-        navigate('/otp-verify', { state: { regData: form, previewUrl: data.previewUrl } });
+      .then(() => {
+        navigate('/login', { state: { registered: true } });
       })
       .catch((err) => {
-        setValidationError(err || "Failed to dispatch verification code.");
+        setValidationError(err || "Registration failed. Please try again.");
       });
   };
 
@@ -172,7 +172,7 @@ export default function Register() {
             type="submit"
             className="w-full py-2.5 bg-govBlue text-white font-bold rounded-xl hover:bg-govBlue-light shadow-md shadow-govBlue/15 flex items-center justify-center space-x-2 mt-4 matte-transition"
           >
-            <span>Generate Mail OTP</span>
+            <span>Create Account</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 

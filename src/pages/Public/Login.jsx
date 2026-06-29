@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ShieldCheck, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { clearError } from '../../store/slices/authSlice';
+import { clearError, login } from '../../store/slices/authSlice';
 import { addSecurityAlert, addAuditLog } from '../../store/slices/securitySlice';
 import Alert from '../../components/Shared/Alert';
 import Card from '../../components/Shared/Card';
@@ -80,7 +80,8 @@ export default function Login() {
       if (user) {
         const sessionData = { ...user, token };
         localStorage.setItem('gov_session', JSON.stringify(sessionData));
-        dispatch({ type: 'auth/loginUser/fulfilled', payload: { user, token } });
+        // Sync session into Redux state
+        dispatch(login({ email: userEmail, password }));
       }
 
     } catch (err) {

@@ -21,19 +21,18 @@ export default function ResetPassword() {
   const { error, loading } = useSelector((state) => state.auth);
 
   const email = location.state?.email || null;
-  const otp = location.state?.otp || null;
 
   useEffect(() => {
     // Clear any previous errors on mount
     dispatch(clearError());
 
-    // Redirect to login if access credentials are not found
-    if (!email || !otp) {
+    // Redirect to forgot-password if email context is missing
+    if (!email) {
       setValidationError("Session expired or invalid reset context. Redirecting to forgot password...");
       const timer = setTimeout(() => navigate('/forgot-password'), 3000);
       return () => clearTimeout(timer);
     }
-  }, [email, otp, navigate, dispatch]);
+  }, [email, navigate, dispatch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -51,7 +50,7 @@ export default function ResetPassword() {
       return;
     }
 
-    dispatch(resetPassword({ email, otp, newPassword, confirmPassword }))
+    dispatch(resetPassword({ email, newPassword, confirmPassword }))
       .unwrap()
       .then((data) => {
         setSuccess(data.message || "Password reset successful! Redirecting to login...");
@@ -97,7 +96,7 @@ export default function ResetPassword() {
           </div>
         )}
 
-        {email && otp && (
+        {email && (
           <form onSubmit={handleSubmit} className="space-y-4 text-xs font-semibold text-govMatte-text">
             
             <div className="space-y-1">

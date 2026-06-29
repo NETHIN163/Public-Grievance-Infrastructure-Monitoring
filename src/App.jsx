@@ -11,7 +11,7 @@ import About from './pages/Public/About';
 import Contact from './pages/Public/Contact';
 import Login from './pages/Public/Login';
 import Register from './pages/Public/Register';
-import OTPVerify from './pages/Public/OTPVerify';
+
 import ForgotPassword from './pages/Public/ForgotPassword';
 import ResetPassword from './pages/Public/ResetPassword';
 import Legal from './pages/Public/Legal';
@@ -102,7 +102,7 @@ export default function App() {
                 : <Register />
             }
           />
-          <Route path="/otp-verify" element={<OTPVerify />} />
+
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/terms" element={<Legal defaultTab="terms" />} />

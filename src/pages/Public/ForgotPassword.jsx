@@ -24,9 +24,9 @@ export default function ForgotPassword() {
 
     dispatch(forgotPassword(email))
       .unwrap()
-      .then((data) => {
-        // Go to OTP verify carrying email context and preview URL
-        navigate('/otp-verify', { state: { resetEmail: email, previewUrl: data.previewUrl } });
+      .then(() => {
+        // Navigate directly to reset password with email context
+        navigate('/reset-password', { state: { email } });
       })
       .catch((err) => {
         setError(err || "Failed to initialize password recovery.");

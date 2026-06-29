@@ -24,65 +24,7 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-export const verifyOTP = createAsyncThunk(
-  'auth/verifyOTP',
-  async ({ email, otp }, { rejectWithValue }) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        return rejectWithValue(data.error || 'Verification failed.');
-      }
-      return data;
-    } catch (err) {
-      return rejectWithValue('Network error occurred. Please try again.');
-    }
-  }
-);
 
-export const loginUser = createAsyncThunk(
-  'auth/loginUser',
-  async ({ email, password }, { rejectWithValue }) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        return rejectWithValue(data.error || 'Invalid credentials.');
-      }
-      return data;
-    } catch (err) {
-      return rejectWithValue('Network error occurred. Please try again.');
-    }
-  }
-);
-
-export const resendOTP = createAsyncThunk(
-  'auth/resendOTP',
-  async (email, { rejectWithValue }) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/resend-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        return rejectWithValue(data.error || 'Failed to resend verification code.');
-      }
-      return data;
-    } catch (err) {
-      return rejectWithValue('Network error occurred. Please try again.');
-    }
-  }
-);
 
 export const forgotPassword = createAsyncThunk(
   'auth/forgotPassword',
@@ -106,12 +48,12 @@ export const forgotPassword = createAsyncThunk(
 
 export const resetPassword = createAsyncThunk(
   'auth/resetPassword',
-  async ({ email, otp, newPassword, confirmPassword }, { rejectWithValue }) => {
+  async ({ email, newPassword, confirmPassword }, { rejectWithValue }) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp, newPassword, confirmPassword }),
+        body: JSON.stringify({ email, newPassword, confirmPassword }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -344,63 +286,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Verify OTP
-      .addCase(verifyOTP.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(verifyOTP.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
-        const { user, token } = action.payload;
-        if (user) {
-          const sessionData = { ...user, token };
-          // Add to users list if not already there
-          if (!state.users.some(u => u.email.toLowerCase() === user.email.toLowerCase())) {
-            state.users.push(user);
-            localStorage.setItem('gov_users', JSON.stringify(state.users));
-          }
-          state.currentUser = sessionData;
-          localStorage.setItem('gov_session', JSON.stringify(sessionData));
-        }
-      })
-      .addCase(verifyOTP.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Login User
-      .addCase(loginUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
-        const { user, token } = action.payload;
-        if (user) {
-          const sessionData = { ...user, token };
-          state.currentUser = sessionData;
-          localStorage.setItem('gov_session', JSON.stringify(sessionData));
-        }
-      })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Resend OTP
-      .addCase(resendOTP.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(resendOTP.fulfilled, (state) => {
-        state.loading = false;
-        state.error = null;
-      })
-      .addCase(resendOTP.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Forgot Password
+
       .addCase(forgotPassword.pending, (state) => {
         state.loading = true;
         state.error = null;
