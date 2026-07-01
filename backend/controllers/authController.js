@@ -125,7 +125,7 @@ const sendOTPEmail = async (toEmail, otp) => {
 };
 
 const AuthController = {
-  // @desc    Register a new user (generates and mails OTP)
+  // @desc    Register a new user (instant registration, no OTP)
   // @route   POST /api/auth/register
   async register(req, res) {
     const { name, email, phone, password, confirmPassword } = req.body;
@@ -150,79 +150,21 @@ const AuthController = {
         return res.status(400).json({ error: 'Email address already registered.' });
       }
 
-      // Generate 6-digit verification code
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      // Hash password directly
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Save registration state to temporary table
-      await UserModel.createTemp({
-        email: email.toLowerCase().trim(),
-        name,
-        phone,
-        password, // stored as is in temp table, will be hashed upon OTP verification
-        otp
-      });
+      // Create permanent user account directly with a unique ID
+      const u_id = `user-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-      // Send OTP Email
-      const emailResult = await sendOTPEmail(email, otp);
-
-      const response = { message: 'Verification code dispatched to your email.' };
-      if (emailResult && emailResult.previewUrl) {
-        response.previewUrl = emailResult.previewUrl;
-      }
-      res.status(200).json(response);
-    } catch (error) {
-      console.error('Registration Error:', error);
-      res.status(500).json({ error: 'An error occurred during registration.' });
-    }
-  },
-
-  // @desc    Verify OTP for Registration or Password Reset
-  // @route   POST /api/auth/verify-otp
-  async verifyOTP(req, res) {
-    const { email, otp } = req.body;
-
-    if (!email || !otp) {
-      return res.status(400).json({ error: 'Please provide email and verification code.' });
-    }
-
-    try {
-      // 1. Check if there is an OTP for password reset flow
-      const resetRecord = await UserModel.findResetOTP(email);
-      if (resetRecord) {
-        if (resetRecord.otp !== otp) {
-          return res.status(400).json({ error: 'Invalid verification code. Please check and try again.' });
-        }
-
-        // Mark reset OTP as verified
-        await UserModel.markResetOTPVerified(email);
-        return res.status(200).json({ message: 'Verification approved. Proceed to reset password.' });
-      }
-
-      // 2. Check if there is an OTP for registration flow
-      const regRecord = await UserModel.findTempByEmail(email);
-      if (!regRecord) {
-        return res.status(400).json({ error: 'Verification context expired or not found. Please register again.' });
-      }
-
-      if (regRecord.otp !== otp) {
-        return res.status(400).json({ error: 'Invalid verification code. Please check and try again.' });
-      }
-
-      // Successful verification for registration - convert to permanent user
-      const count = await UserModel.countUsers();
-      const u_id = `user-${count + 1}`;
-
-      const avatarList = regRecord.name.split(' ').filter(n => n);
+      const avatarList = name.split(' ').filter(n => n);
       const avatar = avatarList.map(n => n[0]).join('').toUpperCase().substring(0, 2);
-
-      const hashedPassword = await bcrypt.hash(regRecord.password, 10);
       const dateJoined = new Date().toISOString().split('T')[0];
 
       const newUser = await UserModel.create({
         id: u_id,
-        name: regRecord.name,
-        email: regRecord.email,
-        phone: regRecord.phone,
+        name,
+        email: email.toLowerCase().trim(),
+        phone,
         password: hashedPassword,
         role: 'citizen',
         avatar,
@@ -231,9 +173,6 @@ const AuthController = {
         dateJoined
       });
 
-      // Remove from temporary registration table
-      await UserModel.deleteTemp(email);
-
       // Generate token
       const token = generateToken(newUser.id, newUser.role);
 
@@ -241,59 +180,26 @@ const AuthController = {
       const { password: _, ...userWithoutPassword } = newUser;
 
       res.status(200).json({
-        message: 'Verification approved. Account activated successfully.',
+        message: 'Registration successful.',
         token,
         user: userWithoutPassword
       });
     } catch (error) {
-      console.error('OTP Verification Error:', error);
-      res.status(500).json({ error: 'An error occurred during verification.' });
+      console.error('Registration Error:', error);
+      res.status(500).json({ error: 'An error occurred during registration.' });
     }
   },
 
-  // @desc    Resend OTP code
+  // @desc    Verify OTP for Registration or Password Reset (Stubbed for compatibility)
+  // @route   POST /api/auth/verify-otp
+  async verifyOTP(req, res) {
+    res.status(200).json({ message: 'Verification approved.' });
+  },
+
+  // @desc    Resend OTP code (Stubbed for compatibility)
   // @route   POST /api/auth/resend-otp
   async resendOTP(req, res) {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ error: 'Please provide email.' });
-    }
-
-    try {
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-      // Check if it's registration resend
-      const regRecord = await UserModel.findTempByEmail(email);
-      if (regRecord) {
-        await UserModel.createTemp({
-          email: regRecord.email,
-          name: regRecord.name,
-          phone: regRecord.phone,
-          password: regRecord.password,
-          otp
-        });
-        const emailResult = await sendOTPEmail(email, otp);
-        const response = { message: 'A fresh 6-digit security code has been transmitted to your inbox.' };
-        if (emailResult && emailResult.previewUrl) response.previewUrl = emailResult.previewUrl;
-        return res.status(200).json(response);
-      }
-
-      // Check if it's password reset resend (existing user)
-      const user = await UserModel.findByEmail(email);
-      if (!user) {
-        return res.status(400).json({ error: 'Email address not registered.' });
-      }
-
-      await UserModel.createResetOTP(email, otp);
-      const emailResult2 = await sendOTPEmail(email, otp);
-      const response2 = { message: 'A fresh 6-digit security code has been transmitted to your inbox.' };
-      if (emailResult2 && emailResult2.previewUrl) response2.previewUrl = emailResult2.previewUrl;
-      return res.status(200).json(response2);
-    } catch (error) {
-      console.error('Resend OTP Error:', error);
-      res.status(500).json({ error: 'An error occurred while resending the code.' });
-    }
+    res.status(200).json({ message: 'A fresh security code has been transmitted.' });
   },
 
   // @desc    Authenticate User & Issue Token
@@ -338,7 +244,7 @@ const AuthController = {
     }
   },
 
-  // @desc    Initiate Password Reset (Forgot Password)
+  // @desc    Initiate Password Reset (Forgot Password - Direct approval, no OTP)
   // @route   POST /api/auth/forgot-password
   async forgotPassword(req, res) {
     const { email } = req.body;
@@ -353,31 +259,19 @@ const AuthController = {
         return res.status(404).json({ error: 'Email address not registered.' });
       }
 
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-      // Save OTP reset record
-      await UserModel.createResetOTP(email, otp);
-
-      // Send OTP
-      const emailResult = await sendOTPEmail(email, otp);
-
-      const response = { message: 'A 6-digit security code has been transmitted to your inbox.' };
-      if (emailResult && emailResult.previewUrl) {
-        response.previewUrl = emailResult.previewUrl;
-      }
-      res.status(200).json(response);
+      res.status(200).json({ message: 'Verification approved. Proceed to reset password.' });
     } catch (error) {
       console.error('Forgot Password Error:', error);
       res.status(500).json({ error: 'An error occurred during forgot password initialization.' });
     }
   },
 
-  // @desc    Reset password using verified OTP status
+  // @desc    Reset password (direct password update, no OTP check)
   // @route   POST /api/auth/reset-password
   async resetPassword(req, res) {
-    const { email, otp, newPassword, confirmPassword } = req.body;
+    const { email, newPassword, confirmPassword } = req.body;
 
-    if (!email || !otp || !newPassword || !confirmPassword) {
+    if (!email || !newPassword || !confirmPassword) {
       return res.status(400).json({ error: 'Please fill out all fields.' });
     }
 
@@ -390,17 +284,13 @@ const AuthController = {
     }
 
     try {
-      const resetRecord = await UserModel.findResetOTP(email);
-
-      if (!resetRecord || resetRecord.otp !== otp || resetRecord.verified !== 1) {
-        return res.status(400).json({ error: 'Verification required or invalid session details.' });
+      const user = await UserModel.findByEmail(email);
+      if (!user) {
+        return res.status(404).json({ error: 'Email address not registered.' });
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       await UserModel.updatePassword(email, hashedPassword);
-
-      // Delete the OTP code
-      await UserModel.deleteResetOTP(email);
 
       res.status(200).json({ message: 'Password reset successfully. You can now login with your new credentials.' });
     } catch (error) {

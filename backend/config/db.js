@@ -103,26 +103,20 @@ const initDb = async () => {
 
     console.log('[DB] Tables verified / created.');
 
+    // ── Purge existing citizen users ─────────────────────
+    console.log('[DB] Purging existing citizen users...');
+    await dbQuery.run("DELETE FROM users WHERE role = 'citizen'");
+    await dbQuery.run("DELETE FROM temp_registrations");
+    await dbQuery.run("DELETE FROM otp_verifications");
+
     // ── Seed default users if empty ──────────────────────
-    const countRow = await dbQuery.get('SELECT COUNT(*)::int AS count FROM users');
+    const countRow = await dbQuery.get("SELECT COUNT(*)::int AS count FROM users WHERE role IN ('admin', 'officer')");
     const userCount = parseInt(countRow?.count || '0', 10);
 
     if (userCount === 0) {
-      console.log('[DB] Seeding default users...');
+      console.log('[DB] Seeding default admins and officers...');
 
       const defaultUsers = [
-        {
-          id: 'user-1',
-          name: 'Aarav Sharma',
-          email: 'citizen@gov.in',
-          phone: '+91 98765 43210',
-          password: 'citizen123',
-          role: 'citizen',
-          avatar: 'AS',
-          status: 'active',
-          area: 'Coimbatore Central Zone',
-          date_joined: '2026-01-15',
-        },
         {
           id: 'user-2',
           name: 'Nethra Swathi',
@@ -171,30 +165,6 @@ const initDb = async () => {
           area: 'National Headquarters',
           date_joined: '2025-08-01',
         },
-        {
-          id: 'user-6',
-          name: 'Priya Patel',
-          email: 'priya@example.com',
-          phone: '+91 88776 65544',
-          password: 'citizen123',
-          role: 'citizen',
-          avatar: 'PP',
-          status: 'active',
-          area: 'Coimbatore South Zone',
-          date_joined: '2026-03-22',
-        },
-        {
-          id: 'user-7',
-          name: 'Karan Johar',
-          email: 'karan@example.com',
-          phone: '+91 77665 54433',
-          password: 'citizen123',
-          role: 'citizen',
-          avatar: 'KJ',
-          status: 'blocked',
-          area: 'Coimbatore West Zone',
-          date_joined: '2026-04-05',
-        },
       ];
 
       for (const u of defaultUsers) {
@@ -207,9 +177,9 @@ const initDb = async () => {
         );
       }
 
-      console.log('[DB] Default users seeded successfully.');
+      console.log('[DB] Default admins/officers seeded successfully.');
     } else {
-      console.log(`[DB] Database already has ${userCount} user(s) — skipping seed.`);
+      console.log(`[DB] Database already has default admin and officer accounts — skipping seed.`);
     }
 
     console.log('[DB] ✅ PostgreSQL (Neon) ready.');

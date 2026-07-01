@@ -2,17 +2,6 @@
 
 export const INITIAL_USERS = [
   {
-    id: "user-1",
-    name: "Aarav Sharma",
-    email: "citizen@gov.in",
-    phone: "+91 98765 43210",
-    role: "citizen",
-    avatar: "AS",
-    status: "active",
-    area: "Coimbatore Central Zone",
-    dateJoined: "2026-01-15"
-  },
-  {
     id: "user-2",
     name: "Nethra Swathi",
     email: "nethraswathi17@gmail.com",
@@ -60,28 +49,6 @@ export const INITIAL_USERS = [
     status: "active",
     area: "National Headquarters",
     dateJoined: "2025-08-01"
-  },
-  {
-    id: "user-6",
-    name: "Priya Patel",
-    email: "priya@example.com",
-    phone: "+91 88776 65544",
-    role: "citizen",
-    avatar: "PP",
-    status: "active",
-    area: "Coimbatore South Zone",
-    dateJoined: "2026-03-22"
-  },
-  {
-    id: "user-7",
-    name: "Karan Johar",
-    email: "karan@example.com",
-    phone: "+91 77665 54433",
-    role: "citizen",
-    avatar: "KJ",
-    status: "blocked",
-    area: "Coimbatore West Zone",
-    dateJoined: "2026-04-05"
   }
 ];
 

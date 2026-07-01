@@ -9,7 +9,7 @@ const UserModel = {
 
   async findByEmail(email) {
     return await dbQuery.get(
-      'SELECT * FROM users WHERE LOWER(email) = $1',
+      'SELECT * FROM users WHERE email = $1',
       [email.toLowerCase().trim()]
     );
   },
@@ -37,7 +37,7 @@ const UserModel = {
 
   async updatePassword(email, newHashedPassword) {
     return await dbQuery.run(
-      'UPDATE users SET password = $1 WHERE LOWER(email) = $2',
+      'UPDATE users SET password = $1 WHERE email = $2',
       [newHashedPassword, email.toLowerCase().trim()]
     );
   },
@@ -51,7 +51,7 @@ const UserModel = {
 
   async findTempByEmail(email) {
     return await dbQuery.get(
-      'SELECT * FROM temp_registrations WHERE LOWER(email) = $1',
+      'SELECT * FROM temp_registrations WHERE email = $1',
       [email.toLowerCase().trim()]
     );
   },
@@ -73,7 +73,7 @@ const UserModel = {
 
   async deleteTemp(email) {
     return await dbQuery.run(
-      'DELETE FROM temp_registrations WHERE LOWER(email) = $1',
+      'DELETE FROM temp_registrations WHERE email = $1',
       [email.toLowerCase().trim()]
     );
   },
@@ -82,7 +82,7 @@ const UserModel = {
 
   async findResetOTP(email) {
     return await dbQuery.get(
-      'SELECT * FROM otp_verifications WHERE LOWER(email) = $1',
+      'SELECT * FROM otp_verifications WHERE email = $1',
       [email.toLowerCase().trim()]
     );
   },
@@ -101,14 +101,14 @@ const UserModel = {
 
   async markResetOTPVerified(email) {
     return await dbQuery.run(
-      'UPDATE otp_verifications SET verified = 1 WHERE LOWER(email) = $1',
+      'UPDATE otp_verifications SET verified = 1 WHERE email = $1',
       [email.toLowerCase().trim()]
     );
   },
 
   async deleteResetOTP(email) {
     return await dbQuery.run(
-      'DELETE FROM otp_verifications WHERE LOWER(email) = $1',
+      'DELETE FROM otp_verifications WHERE email = $1',
       [email.toLowerCase().trim()]
     );
   },

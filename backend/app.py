@@ -53,14 +53,16 @@ def init_db():
         )
     ''')
     
+    # Purge existing citizen users from SQLite
+    cursor.execute("DELETE FROM users WHERE role = 'citizen'")
+    cursor.execute("DELETE FROM temp_registrations")
+    
     # Seed default users if they don't exist
     seed_users = [
-        ("user-1", "Aarav Sharma", "citizen@gov.in", None, "citizen", "AS", "active", "Coimbatore Central Zone", "2026-01-15"),
         ("user-2", "Nethra Swathi", "nethraswathi17@gmail.com", "nethrasara", "officer", "NS", "active", "Coimbatore Central Zone", "2025-11-20"),
         ("user-3", "Dr. Sunita Rao", "officer2@gov.in", None, "officer", "SR", "active", "Coimbatore South Zone", "2025-12-05"),
         ("user-4", "Deepak Verma", "officer3@gov.in", None, "officer", "DV", "active", "Waste Management", "2026-02-10"),
-        ("user-5", "Nethin Admin", "nethin163@gmail.com", "9894506871", "admin", "NA", "active", "National Headquarters", "2025-08-01"),
-        ("user-6", "Priya Patel", "priya@example.com", None, "citizen", "PP", "active", "Coimbatore South Zone", "2026-03-22")
+        ("user-5", "Nethin Admin", "nethin163@gmail.com", "9894506871", "admin", "NA", "active", "National Headquarters", "2025-08-01")
     ]
     
     for u_id, name, email, password, role, avatar, status, area, date_joined in seed_users:
@@ -185,65 +187,9 @@ def register():
         conn.close()
         return jsonify({"error": "Email address already registered."}), 400
         
-    # Generate OTP
-    otp = str(random.randint(100000, 999999))
-    
-    # Save registration info in temp store
-    cursor.execute('''
-        INSERT OR REPLACE INTO temp_registrations (email, name, password, otp)
-        VALUES (?, ?, ?, ?)
-    ''', (email.lower().strip(), name, password, otp))
-    
-    conn.commit()
-    conn.close()
-    
-    # Dispatch OTP email
-    send_otp_email(email.lower().strip(), otp)
-    
-    return jsonify({"message": "Verification code dispatched to your email."}), 200
-
-@app.route('/api/auth/verify-otp', methods=['POST'])
-def verify_otp():
-    data = request.json
-    email = data.get('email')
-    otp = data.get('otp')
-    
-    if not email or not otp:
-        return jsonify({"error": "Please provide email and verification code."}), 400
-        
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Find temp registration
-    cursor.execute("SELECT name, password, otp FROM temp_registrations WHERE email = ?", (email.lower().strip(),))
-    record = cursor.fetchone()
-    
-    if not record:
-        conn.close()
-        return jsonify({"error": "Verification context expired or not found. Please register again."}), 400
-        
-    if record['otp'] != otp:
-        conn.close()
-        return jsonify({"error": "Invalid verification code. Please check and try again."}), 400
-        
-    # Check if user already exists (e.g. login or password reset flow)
-    cursor.execute("SELECT id, name, email, role, avatar, status, area, date_joined FROM users WHERE email = ?", (email.lower().strip(),))
-    existing_user_row = cursor.fetchone()
-    if existing_user_row:
-        cursor.execute("DELETE FROM temp_registrations WHERE email = ?", (email.lower().strip(),))
-        conn.commit()
-        user_data = dict(existing_user_row)
-        conn.close()
-        return jsonify({"user": user_data, "message": "Verification approved."}), 200
-
-    # New citizen registration flow
-    name = record['name']
-    password = record['password']
-    
-    # Get total count to create next id
-    cursor.execute("SELECT COUNT(*) FROM users")
-    count = cursor.fetchone()[0]
-    u_id = f"user-{count + 1}"
+    # Generate a unique ID
+    import time
+    u_id = f"user-{int(time.time())}-{random.randint(1000, 9999)}"
     
     avatar_list = [n[0] for n in name.split() if n]
     avatar = "".join(avatar_list).upper()[:2] if avatar_list else name[:2].upper()
@@ -257,57 +203,26 @@ def verify_otp():
             VALUES (?, ?, ?, ?, 'citizen', ?, 'active', 'Coimbatore Central Zone', ?)
         ''', (u_id, name, email.lower().strip(), password, avatar, date_joined))
         
-        # Remove from temp storage
-        cursor.execute("DELETE FROM temp_registrations WHERE email = ?", (email.lower().strip(),))
         conn.commit()
         
-        # Retrieve newly created user to log in
+        # Retrieve newly created user to return
         cursor.execute("SELECT id, name, email, role, avatar, status, area, date_joined FROM users WHERE email = ?", (email.lower().strip(),))
         user = dict(cursor.fetchone())
         conn.close()
         
-        return jsonify({"user": user, "message": "Verification approved. Account activated successfully."}), 200
+        return jsonify({"user": user, "message": "Registration successful."}), 200
         
     except sqlite3.IntegrityError:
         conn.close()
-        return jsonify({"error": "Failed to create account. Email may have been registered during verification."}), 400
+        return jsonify({"error": "Failed to create account."}), 400
+
+@app.route('/api/auth/verify-otp', methods=['POST'])
+def verify_otp():
+    return jsonify({"message": "Verification approved."}), 200
 
 @app.route('/api/auth/resend-otp', methods=['POST'])
 def resend_otp():
-    data = request.json
-    email = data.get('email')
-    
-    if not email:
-        return jsonify({"error": "Please provide email."}), 400
-        
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT name, password FROM temp_registrations WHERE email = ?", (email.lower().strip(),))
-    record = cursor.fetchone()
-    
-    otp = str(random.randint(100000, 999999))
-    
-    if record:
-        cursor.execute("UPDATE temp_registrations SET otp = ? WHERE email = ?", (otp, email.lower().strip()))
-    else:
-        # Check if the user is an existing user requesting reset
-        cursor.execute("SELECT name FROM users WHERE email = ?", (email.lower().strip(),))
-        user_rec = cursor.fetchone()
-        if not user_rec:
-            conn.close()
-            return jsonify({"error": "Email address not registered."}), 400
-            
-        cursor.execute('''
-            INSERT OR REPLACE INTO temp_registrations (email, name, password, otp)
-            VALUES (?, ?, 'reset_pending', ?)
-        ''', (email.lower().strip(), user_rec['name'], otp))
-        
-    conn.commit()
-    conn.close()
-    
-    send_otp_email(email.lower().strip(), otp)
-    return jsonify({"message": "A fresh 6-digit security code has been transmitted to your inbox."}), 200
+    return jsonify({"message": "A fresh security code has been transmitted."}), 200
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -370,33 +285,22 @@ def forgot_password():
 
     cursor.execute("SELECT name FROM users WHERE email = ?", (email.lower().strip(),))
     user_rec = cursor.fetchone()
-
-    if not user_rec:
-        conn.close()
-        return jsonify({"error": "Email address not registered."}), 400
-
-    otp = str(random.randint(100000, 999999))
-
-    cursor.execute('''
-        INSERT OR REPLACE INTO temp_registrations (email, name, password, otp)
-        VALUES (?, ?, 'reset_pending', ?)
-    ''', (email.lower().strip(), user_rec['name'], otp))
-    conn.commit()
     conn.close()
 
-    send_otp_email(email.lower().strip(), otp)
-    return jsonify({"message": "Password reset code dispatched to your email."}), 200
+    if not user_rec:
+        return jsonify({"error": "Email address not registered."}), 400
+
+    return jsonify({"message": "Verification approved. Proceed to reset password."}), 200
 
 
 @app.route('/api/auth/reset-password', methods=['POST'])
 def reset_password():
     data = request.json
     email = data.get('email')
-    otp = data.get('otp')
     new_password = data.get('newPassword')
     confirm_password = data.get('confirmPassword')
 
-    if not email or not otp or not new_password or not confirm_password:
+    if not email or not new_password or not confirm_password:
         return jsonify({"error": "Please provide all required fields."}), 400
 
     if new_password != confirm_password:
@@ -405,19 +309,14 @@ def reset_password():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT otp FROM temp_registrations WHERE email = ?", (email.lower().strip(),))
-    record = cursor.fetchone()
+    cursor.execute("SELECT id FROM users WHERE email = ?", (email.lower().strip(),))
+    user_rec = cursor.fetchone()
 
-    if not record:
+    if not user_rec:
         conn.close()
-        return jsonify({"error": "Reset context expired. Please request a new code."}), 400
-
-    if record['otp'] != otp:
-        conn.close()
-        return jsonify({"error": "Invalid verification code."}), 400
+        return jsonify({"error": "Email address not registered."}), 400
 
     cursor.execute("UPDATE users SET password = ? WHERE email = ?", (new_password, email.lower().strip()))
-    cursor.execute("DELETE FROM temp_registrations WHERE email = ?", (email.lower().strip(),))
     conn.commit()
     conn.close()
 
