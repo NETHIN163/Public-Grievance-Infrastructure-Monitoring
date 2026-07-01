@@ -81,7 +81,7 @@ export default function Login() {
         const sessionData = { ...user, token };
         localStorage.setItem('gov_session', JSON.stringify(sessionData));
         // Sync session into Redux state
-        dispatch(login({ email: userEmail, password }));
+        dispatch(login(sessionData));
       }
 
     } catch (err) {

@@ -102,6 +102,23 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     login: (state, action) => {
+      // If the payload is already an authenticated user object from the backend
+      if (action.payload && action.payload.role) {
+        const authenticatedUser = action.payload;
+        state.currentUser = authenticatedUser;
+        state.error = null;
+        
+        // Add to local state.users if not present
+        const exists = state.users.find(u => u.email.toLowerCase() === authenticatedUser.email.toLowerCase().trim());
+        if (!exists) {
+          state.users.push(authenticatedUser);
+          localStorage.setItem('gov_users', JSON.stringify(state.users));
+        }
+        localStorage.setItem('gov_session', JSON.stringify(authenticatedUser));
+        return;
+      }
+
+      // Fallback for purely local mock authentication
       const { email, password } = action.payload;
       const user = state.users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
       if (user) {
